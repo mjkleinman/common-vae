@@ -405,7 +405,7 @@ class CommonLatentLoss(BaseLoss):
                                         storer=storer,
                                         distribution=self.rec_dist)
         kl_loss = _kl_normal_loss(*latent_dist, storer)
-        klqq_loss = _klqq_loss()  # add this in
+        klqq_loss = _kl_div2_loss(mu1, logvar1, mu2, logvar2)  # add this in
 
         C = (linear_annealing(self.C_init, self.C_fin, self.n_train_steps, self.steps_anneal)
              if is_train else self.C_fin)
@@ -505,6 +505,16 @@ def _kl_normal_loss(mean, logvar, storer=None):
             storer['kl_loss_' + str(i)].append(latent_kl[i].item())
 
     return total_kl
+
+
+def _kl_div2_loss(mu, logvar, mu1, logvar1):
+    logsigma = logvar.mul(0.5)
+    logsigma1 = logvar1.mul(0.5)
+    sigma_2 = logsigma.mul(2).exp_()
+    mu1 = mu1.expand_as(mu)
+    logsigma1 = logsigma1.expand_as(logsigma)
+    sigma1_2 = logsigma1.mul(2).exp_().add(1e-7)
+    return (mu - mu1).pow(2).div(sigma1_2).add_(sigma_2.div(sigma1_2)).mul_(-1).add_(1).add_(logsigma.mul(2)).add_(logsigma1.mul(-2)).mul_(-0.5)
 
 
 def _permute_dims(latent_sample):
