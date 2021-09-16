@@ -8,6 +8,7 @@ from torch.nn import functional as F
 from disvae.utils.initialization import weights_init
 from .encoders import get_encoder
 from .decoders import get_decoder
+import random
 
 MODELS = ["Burgess", "Doubleburgess"]
 
@@ -27,7 +28,7 @@ def init_specific_model(model_type, img_size, latent_dim):
 
 
 class VAE(nn.Module):
-    def __init__(self, img_size, encoder, decoder, latent_dim):
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=0):
         """
         Class which defines model and forward pass.
 
@@ -45,7 +46,7 @@ class VAE(nn.Module):
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
         self.encoder = encoder(img_size, self.latent_dim)
-        self.decoder = decoder(img_size, self.latent_dim)
+        self.decoder = decoder(img_size, self.latent_dim + latent_dim_unq)
 
         self.reset_parameters()
 
@@ -102,13 +103,22 @@ class VAE(nn.Module):
 
 
 class DoubleVae(VAE):
-    def __init__(self, img_size, encoder, decoder, latent_dim):
-        super().__init__(img_size, encoder, decoder, latent_dim)
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq):
+        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
 
-    def reparameterize_double(self, mean1, logvar1, mean2, logvar2):
-        sample1 = self.reparameterize(mean1, logvar1)
-        sample2 = self.reparameterize(mean2, logvar2)
-        return sample1, sample2
+    def reparameterize_double(self, mean_u1, logvar_u1, mean_c1, logvar_c1, mean_u2, logvar_u2, mean_c2, logvar_c2):
+
+        mean_a = torch.cat((mean_u1, mean_c1, mean_u2), dim=-1)
+        mean_b = torch.cat((mean_u1, mean_c2, mean_u2), dim=-1)
+        logvar_a = torch.cat((logvar_u1, logvar_c1, logvar_u2), dim=-1)
+        logvar_b = torch.cat((logvar_u1, logvar_c2, logvar_u2), dim=-1)
+        sample1 = self.reparameterize(mean_a, logvar_a)
+        sample2 = self.reparameterize(mean_b, logvar_b)
+        # might be better to concatenate and use both samples
+        if random.random() > 0.5:
+            return sample1
+        else:
+            return sample2
 
     def forward(self, x_a, x_b):
         latent_dists = self.encoder(x_a, x_b)
@@ -116,5 +126,7 @@ class DoubleVae(VAE):
         reconstruct = self.decoder(latent_sample)
         return reconstruct, latent_dists, latent_sample
 
-    def sample_latent(self, x):
-        raise NotImplementedError
+    def sample_latent(self, x_a, x_b):
+        latent_dists = self.encoder(x_a, x_b)
+        latent_sample = self.reparameterize_double(*latent_dists)
+        return latent_sample

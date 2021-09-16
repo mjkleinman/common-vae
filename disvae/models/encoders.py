@@ -90,16 +90,22 @@ class EncoderBurgess(nn.Module):
 
 
 class EncoderDoubleburgess(nn.Module):
-    def __init__(self, img_size, latent_dim=10):
+    def __init__(self, img_size, latent_dim=10, latent_dim_common=8):
         super(EncoderDoubleburgess, self).__init__()
+        self.latent_dim_common = latent_dim_common
+        self.latent_dim_unique = latent_dim - self.latent_dim_common
         self.encoder1 = get_encoder("Burgess")(img_size, latent_dim)
         self.encoder2 = get_encoder('Burgess')(img_size, latent_dim)
 
     def forward(self, x_a, x_b):
         mu1, logvar1 = self.encoder1(x_a)
         mu2, logvar2 = self.encoder2(x_b)
-        return mu1, logvar1, mu2, logvar2
-
+        # todo: can clean up by splititng in a function
+        mu_u1, mu_c1 = mu1[:, :self.latent_dim_unique], mu1[:, self.latent_dim_unique:]
+        mu_u2, mu_c2 = mu2[:, :self.latent_dim_unique], mu2[:, self.latent_dim_unique:]
+        logvar_u2, logvar_c2 = logvar2[:, :self.latent_dim_unique], logvar2[:, self.latent_dim_unique:]
+        logvar_u1, logvar_c1 = logvar1[:, :self.latent_dim_unique], logvar1[:, self.latent_dim_unique:]
+        return mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2
 
 # if __name__ == '__main__':
 #     encoder = get_encoder('DoubleBurgess')

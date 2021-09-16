@@ -366,13 +366,23 @@ class MNIST(datasets.MNIST):
                              transforms.ToTensor()
                          ]))
 
-# This will be like the DoubleCifar that I have previously implemented
+# This will be like the DoubleCifar that I have previously implemented, make sure this works, need to double check that the transforms are working properly here
 class DoubleMNIST(MNIST):
     super().__init__()
 
-    def __getitem__(self, idx):
-        # fill this in
+    def __getitem__(self, index):
 
+        img, _ = self.data[index], int(self.labels[index])
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.fromarray(np.transpose(img, (1, 2, 0)))
+        img, img_a, img_b = self.transform(img), self.transform(img), self.transform(img)
+
+        length_image = 14
+        img[:, :, :(14 - length_image)] = 0.
+        if length_image < 28:
+            img_b[:, :, length_image:] = 0.
         return img, img_a, img_b
 
 

@@ -392,11 +392,9 @@ class BtcvaeLoss(BaseLoss):
 
 
 class CommonLatentLoss(BaseLoss):
-    def __init__(self, C_init=0., C_fin=20., gamma=100., **kwargs):
+    def __init__(self, gamma=100., **kwargs):
         super().__init__(**kwargs)
         self.gamma = gamma
-        self.C_init = C_init
-        self.C_fin = C_fin
 
     def __call__(self, data, recon_data, latent_dist, is_train, storer, **kwargs):
         storer = self._pre_call(is_train, storer)
@@ -404,13 +402,13 @@ class CommonLatentLoss(BaseLoss):
         rec_loss = _reconstruction_loss(data, recon_data,
                                         storer=storer,
                                         distribution=self.rec_dist)
-        kl_loss = _kl_normal_loss(*latent_dist, storer)
-        klqq_loss = _kl_div2_loss(mu1, logvar1, mu2, logvar2)  # add this in
 
-        C = (linear_annealing(self.C_init, self.C_fin, self.n_train_steps, self.steps_anneal)
-             if is_train else self.C_fin)
-
-        loss = rec_loss + self.gamma * (kl_loss - C).abs()
+        mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2 = latent_dist
+        kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer) + _kl_normal_loss(mu_u2, logvar_u2, storer)
+        kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer) + _kl_normal_loss(mu_c2, logvar_c2, storer)
+        klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
+        kl_loss = kl_loss_u + kl_loss_c  # todo: scale the c
+        loss = rec_loss + self.gamma * kl_loss + klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())
