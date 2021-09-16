@@ -22,7 +22,7 @@ def init_specific_model(model_type, img_size, latent_dim):
 
     encoder = get_encoder(model_type)
     decoder = get_decoder(model_type)
-    model = VAE(img_size, encoder, decoder, latent_dim)
+    model = DoubleVAE(img_size, encoder, decoder, latent_dim)  # changed to Double
     model.model_type = model_type  # store to help reloading
     return model
 
@@ -102,8 +102,8 @@ class VAE(nn.Module):
         return latent_sample
 
 
-class DoubleVae(VAE):
-    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq):
+class DoubleVAE(VAE):
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=2):
         super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
 
     def reparameterize_double(self, mean_u1, logvar_u1, mean_c1, logvar_c1, mean_u2, logvar_u2, mean_c2, logvar_c2):
@@ -121,10 +121,10 @@ class DoubleVae(VAE):
             return sample2
 
     def forward(self, x_a, x_b):
-        latent_dists = self.encoder(x_a, x_b)
-        latent_sample = self.reparameterize_double(*latent_dists)
+        latent_dists_double = self.encoder(x_a, x_b)
+        latent_sample = self.reparameterize_double(*latent_dists_double)
         reconstruct = self.decoder(latent_sample)
-        return reconstruct, latent_dists, latent_sample
+        return reconstruct, latent_dists_double, latent_sample
 
     def sample_latent(self, x_a, x_b):
         latent_dists = self.encoder(x_a, x_b)

@@ -22,7 +22,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "fashion": "FashionMNIST",
                  "dsprites": "DSprites",
                  "celeba": "CelebA",
-                 "chairs": "Chairs"}
+                 "chairs": "Chairs",
+                 "dmnist": "DoubleMNIST"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -367,24 +368,27 @@ class MNIST(datasets.MNIST):
                          ]))
 
 # This will be like the DoubleCifar that I have previously implemented, make sure this works, need to double check that the transforms are working properly here
+
+
 class DoubleMNIST(MNIST):
-    super().__init__()
+    def __init__(self, **kwargs):
+        super(DoubleMNIST, self).__init__()
 
     def __getitem__(self, index):
-
-        img, _ = self.data[index], int(self.labels[index])
+        img, _ = self.data[index], int(self.targets[index])
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-        img = Image.fromarray(np.transpose(img, (1, 2, 0)))
-        img, img_a, img_b = self.transform(img), self.transform(img), self.transform(img)
+        img = Image.fromarray(img.numpy(), mode='L')
 
-        length_image = 14
-        img[:, :, :(14 - length_image)] = 0.
-        if length_image < 28:
-            img_b[:, :, length_image:] = 0.
-        return img, img_a, img_b
+        if self.transform is not None:
+            img = self.transform(img)
 
+        img_a, img_b = img, img
+        # length_image = 16
+        # img_a[:, :, :length_image] = 0.
+        # img_b[:, :, length_image:] = 0.
+        return (img, img_a, img_b), 0
 
 
 class FashionMNIST(datasets.FashionMNIST):

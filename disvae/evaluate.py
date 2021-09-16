@@ -103,15 +103,18 @@ class Evaluator:
         """
         storer = defaultdict(list)
         for data, _ in tqdm(dataloader, leave=False, disable=not self.is_progress_bar):
-            data = data.to(self.device)
+            data_full, data_a, data_b = data
+            data_full = data_full.to(self.device)
+            data_a = data_a.to(self.device)
+            data_b = data_b.to(self.device)
 
             try:
-                recon_batch, latent_dist, latent_sample = self.model(data)
-                _ = self.loss_f(data, recon_batch, latent_dist, self.model.training,
+                recon_batch, latent_dist, latent_sample = self.model(data_a, data_b)
+                _ = self.loss_f(data_full, recon_batch, latent_dist, self.model.training,
                                 storer, latent_sample=latent_sample)
             except ValueError:
                 # for losses that use multiple optimizers (e.g. Factor)
-                _ = self.loss_f.call_optimize(data, self.model, None, storer)
+                _ = self.loss_f.call_optimize(data_full, self.model, None, storer)
 
             losses = {k: sum(v) / len(dataloader) for k, v in storer.items()}
             return losses

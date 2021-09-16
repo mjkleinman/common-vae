@@ -9,7 +9,8 @@ from torch import nn
 
 # ALL decoders should be called Decoder<Model>
 def get_decoder(model_type):
-    model_type = model_type.lower().capitalize()
+    # model_type = model_type.lower().capitalize()
+    model_type = "Burgess"
     return eval("Decoder{}".format(model_type))
 
 

@@ -105,6 +105,7 @@ class EncoderDoubleburgess(nn.Module):
         mu_u2, mu_c2 = mu2[:, :self.latent_dim_unique], mu2[:, self.latent_dim_unique:]
         logvar_u2, logvar_c2 = logvar2[:, :self.latent_dim_unique], logvar2[:, self.latent_dim_unique:]
         logvar_u1, logvar_c1 = logvar1[:, :self.latent_dim_unique], logvar1[:, self.latent_dim_unique:]
+
         return mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2
 
 # if __name__ == '__main__':

@@ -14,7 +14,7 @@ from disvae.utils.math import (log_density_gaussian, log_importance_weight_matri
                                matrix_log_density_gaussian)
 
 
-LOSSES = ["VAE", "betaH", "betaB", "factor", "btcvae"]
+LOSSES = ["VAE", "betaH", "betaB", "factor", "btcvae", "CVAE"]
 RECON_DIST = ["bernoulli", "laplace", "gaussian"]
 
 
@@ -27,6 +27,8 @@ def get_loss_f(loss_name, **kwargs_parse):
         return BetaHLoss(beta=kwargs_parse["betaH_B"], **kwargs_all)
     elif loss_name == "VAE":
         return BetaHLoss(beta=1, **kwargs_all)
+    elif loss_name == "CVAE":
+        return CommonLatentLoss(gamma=kwargs_parse["betaB_G"], **kwargs_all)
     elif loss_name == "betaB":
         return BetaBLoss(C_init=kwargs_parse["betaB_initC"],
                          C_fin=kwargs_parse["betaB_finC"],
@@ -512,7 +514,7 @@ def _kl_div2_loss(mu, logvar, mu1, logvar1):
     mu1 = mu1.expand_as(mu)
     logsigma1 = logsigma1.expand_as(logsigma)
     sigma1_2 = logsigma1.mul(2).exp_().add(1e-7)
-    return (mu - mu1).pow(2).div(sigma1_2).add_(sigma_2.div(sigma1_2)).mul_(-1).add_(1).add_(logsigma.mul(2)).add_(logsigma1.mul(-2)).mul_(-0.5)
+    return torch.sum((mu - mu1).pow(2).div(sigma1_2).add_(sigma_2.div(sigma1_2)).mul_(-1).add_(1).add_(logsigma.mul(2)).add_(logsigma1.mul(-2)).mul_(-0.5))
 
 
 def _permute_dims(latent_sample):
