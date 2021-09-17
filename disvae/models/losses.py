@@ -409,12 +409,14 @@ class CommonLatentLoss(BaseLoss):
         kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer) + _kl_normal_loss(mu_u2, logvar_u2, storer)
         kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer) + _kl_normal_loss(mu_c2, logvar_c2, storer)
         klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
-        kl_loss = kl_loss_u + 0.5 * kl_loss_c  # todo: scale the c
+        kl_loss = kl_loss_u + 0.1 * kl_loss_c  # todo: scale the c
         loss = rec_loss + self.gamma * kl_loss + 10 * klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())
-
+            storer['kl_loss_u'].append(kl_loss_u.item())
+            storer['kl_loss_c'].append(kl_loss_c.item())
+            storer['klqq_loss'].append(klqq_loss.item())
         return loss
 
 
