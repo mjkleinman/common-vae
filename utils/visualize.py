@@ -91,7 +91,7 @@ class Visualizer():
         # symmetrical traversals
         return (-1 * max_traversal, max_traversal)
 
-    def _traverse_line(self, idx, n_samples, data=None):
+    def _traverse_line(self, idx, n_samples, data=None, data_a=None, data_b=None):
         """Return a (size, latent_size) latent sample, corresponding to a traversal
         of a latent variable indicated by idx.
 
@@ -119,7 +119,10 @@ class Visualizer():
                 raise ValueError("Every value should be sampled from the same posterior, but {} datapoints given.".format(data.size(0)))
 
             with torch.no_grad():
-                post_mean, post_logvar = self.model.encoder(data.to(self.device))
+                pmu1, plu1, pmc1, plc1, pmu2, plu2, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
+                # just sampling from the posterior of the common input x_a for now
+                post_mean = torch.cat((pmu1, pmc1, pmu2), dim=-1)
+                post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
                 samples = self.model.reparameterize(post_mean, post_logvar)
                 samples = samples.cpu().repeat(n_samples, 1)
                 post_mean_idx = post_mean.cpu()[0, idx]
@@ -188,7 +191,7 @@ class Visualizer():
         data = data[:size[0] * size[1], ...]
         return self._save_or_return(data, size, PLOT_NAMES["data_samples"])
 
-    def reconstruct(self, data, size=(8, 8), is_original=True, is_force_return=False):
+    def reconstruct(self, data, data_a, data_b, size=(8, 8), is_original=True, is_force_return=False):
         """Generate reconstructions of data through the model.
 
         Parameters
@@ -216,7 +219,9 @@ class Visualizer():
 
         with torch.no_grad():
             originals = data.to(self.device)[:n_samples, ...]
-            recs, _, _ = self.model(originals)
+            originals_a = data_a.to(self.device)[:n_samples, ...]
+            originals_b = data_b.to(self.device)[:n_samples, ...]
+            recs, _, _ = self.model(originals_a, originals_b)
 
         originals = originals.cpu()
         recs = recs.view(-1, *self.model.img_size).cpu()
@@ -227,6 +232,8 @@ class Visualizer():
 
     def traversals(self,
                    data=None,
+                   data_a=None,
+                   data_b=None,
                    is_reorder_latents=False,
                    n_per_latent=8,
                    n_latents=None,
@@ -256,7 +263,7 @@ class Visualizer():
             Force returning instead of saving the image.
         """
         n_latents = n_latents if n_latents is not None else self.model.latent_dim
-        latent_samples = [self._traverse_line(dim, n_per_latent, data=data)
+        latent_samples = [self._traverse_line(dim, n_per_latent, data=data, data_a=data_a, data_b=data_b)
                           for dim in range(self.latent_dim)]
         decoded_traversal = self._decode_latents(torch.cat(latent_samples, dim=0))
 
@@ -264,8 +271,10 @@ class Visualizer():
             n_images, *other_shape = decoded_traversal.size()
             n_rows = n_images // n_per_latent
             decoded_traversal = decoded_traversal.reshape(n_rows, n_per_latent, *other_shape)
-            decoded_traversal = sort_list_by_other(decoded_traversal, self.losses)
-            decoded_traversal = torch.stack(decoded_traversal, dim=0)
+            # MK: removed for now because self.losses didn't have the correct shape extracting from model
+            # decoded_traversal = sort_list_by_other(decoded_traversal, self.losses)
+            # decoded_traversal = torch.stack(decoded_traversal, dim=0)
+            # print(decoded_traversal.size())
             decoded_traversal = decoded_traversal.reshape(n_images, *other_shape)
 
         decoded_traversal = decoded_traversal[range(n_per_latent * n_latents), ...]
@@ -277,7 +286,7 @@ class Visualizer():
         return self._save_or_return(decoded_traversal.data, size, filename,
                                     is_force_return=is_force_return)
 
-    def reconstruct_traverse(self, data,
+    def reconstruct_traverse(self, data, data_a, data_b,
                              is_posterior=True,
                              n_per_latent=8,
                              n_latents=None,
@@ -309,9 +318,13 @@ class Visualizer():
         n_latents = n_latents if n_latents is not None else self.model.latent_dim
 
         reconstructions = self.reconstruct(data[:2 * n_per_latent, ...],
+                                           data_a[:2 * n_per_latent, ...],
+                                           data_b[:2 * n_per_latent, ...],
                                            size=(2, n_per_latent),
                                            is_force_return=True)
         traversals = self.traversals(data=data[0:1, ...] if is_posterior else None,
+                                     data_a=data_a[0:1, ...] if is_posterior else None,
+                                     data_b=data_b[0:1, ...] if is_posterior else None,
                                      is_reorder_latents=True,
                                      n_per_latent=n_per_latent,
                                      n_latents=n_latents,
@@ -328,7 +341,7 @@ class Visualizer():
         filename = os.path.join(self.model_dir, PLOT_NAMES["reconstruct_traverse"])
         concatenated.save(filename)
 
-    def gif_traversals(self, data, n_latents=None, n_per_gif=15):
+    def gif_traversals(self, data, data_a, data_b, n_latents=None, n_per_gif=15):
         """Generates a grid of gifs of latent posterior traversals where the rows
         are the latent dimensions and the columns are random images.
 
@@ -349,7 +362,8 @@ class Visualizer():
         width_col = int(width_col * self.upsample_factor)
         all_cols = [[] for c in range(n_per_gif)]
         for i in range(n_images):
-            grid = self.traversals(data=data[i:i + 1, ...], is_reorder_latents=True,
+            grid = self.traversals(data=data[i:i + 1, ...], data_a=data_a[i:i + 1, ...], data_b=data_b[i:i + 1, ...],
+                                   is_reorder_latents=True,
                                    n_per_latent=n_per_gif, n_latents=n_latents,
                                    is_force_return=True)
 

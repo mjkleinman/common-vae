@@ -45,8 +45,8 @@ class VAE(nn.Module):
         self.latent_dim = latent_dim
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
-        self.encoder = encoder(img_size, self.latent_dim)
-        self.decoder = decoder(img_size, self.latent_dim + latent_dim_unq)
+        self.encoder = encoder(img_size, self.latent_dim - latent_dim_unq)
+        self.decoder = decoder(img_size, self.latent_dim)
 
         self.reset_parameters()
 

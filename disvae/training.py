@@ -59,7 +59,7 @@ class Trainer():
         self.logger = logger
         self.losses_logger = LossesLogger(os.path.join(self.save_dir, TRAIN_LOSSES_LOGFILE))
         self.gif_visualizer = gif_visualizer
-        self.gif_visualizer = None # remove this after debuggin
+        # self.gif_visualizer = None  # remove this after debuggin
         self.logger.info("Training Device: {}".format(self.device))
 
     def __call__(self, data_loader,

@@ -78,7 +78,7 @@ def main(args):
     size = (args.n_rows, args.n_cols)
     # same samples for all plots: sample max then take first `x`data  for all plots
     num_samples = args.n_cols * args.n_rows
-    samples = get_samples(dataset, num_samples, idcs=args.idcs)
+    samples, samples_a, samples_b = get_samples(dataset, num_samples, idcs=args.idcs)
 
     if "all" in args.plots:
         args.plots = [p for p in PLOT_TYPES if p != "all"]
@@ -89,20 +89,24 @@ def main(args):
         elif plot_type == 'data-samples':
             viz.data_samples(samples, size=size)
         elif plot_type == "reconstruct":
-            viz.reconstruct(samples, size=size)
+            viz.reconstruct(samples, samples_a, samples_b, size=size)
         elif plot_type == 'traversals':
             viz.traversals(data=samples[0:1, ...] if args.is_posterior else None,
+                           data_a=samples_a[0:1, ...] if args.is_posterior else None,
+                           data_b=samples_b[0:1, ...] if args.is_posterior else None,
                            n_per_latent=args.n_cols,
                            n_latents=args.n_rows,
                            is_reorder_latents=True)
         elif plot_type == "reconstruct-traverse":
-            viz.reconstruct_traverse(samples,
+            viz.reconstruct_traverse(samples, samples_a, samples_b,
                                      is_posterior=args.is_posterior,
                                      n_latents=args.n_rows,
                                      n_per_latent=args.n_cols,
                                      is_show_text=args.is_show_loss)
         elif plot_type == "gif-traversals":
-            viz.gif_traversals(samples[:args.n_cols, ...], n_latents=args.n_rows)
+            viz.gif_traversals(samples[:args.n_cols, ...],
+                               samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
+                               n_latents=args.n_rows)
         else:
             raise ValueError("Unkown plot_type={}".format(plot_type))
 
