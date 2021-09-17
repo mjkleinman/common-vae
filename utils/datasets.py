@@ -23,7 +23,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "dsprites": "DSprites",
                  "celeba": "CelebA",
                  "chairs": "Chairs",
-                 "dmnist": "DoubleMNIST"}
+                 "dmnist": "DoubleMNIST",
+                 "dceleba": "DoubleCelebA"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -290,6 +291,25 @@ class CelebA(DisentangledDataset):
         # no label so return 0 (note that can't return None because)
         # dataloaders requires so
         return img, 0
+
+
+class DoubleCelebA(CelebA):
+    def __init__(self, **kwargs):
+        super(DoubleCelebA, self).__init__()
+
+    def __getitem__(self, idx):
+        img_path = self.imgs[idx]
+        # img values already between 0 and 255
+        img = imread(img_path)
+
+        # put each pixel in [0.,1.] and reshape to (C x H x W)
+        img, img_a, img_b = self.transforms(img), self.transforms(img), self.transforms(img)
+        img_a[..., :32] = 0.
+        img_b[..., 32:] = 0.
+
+        # no label so return 0 (note that can't return None because)
+        # dataloaders requires so
+        return (img, img_a, img_b), 0
 
 
 class Chairs(datasets.ImageFolder):
