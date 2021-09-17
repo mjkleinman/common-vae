@@ -384,10 +384,10 @@ class DoubleMNIST(MNIST):
         if self.transform is not None:
             img = self.transform(img)
 
-        img_a, img_b = img, img
-        # length_image = 16
-        # img_a[:, :, :length_image] = 0.
-        # img_b[:, :, length_image:] = 0.
+        img_a, img_b = img.clone(), img.clone()
+        length_image = 16
+        img_a[:, :, :length_image] = 0.
+        img_b[:, :, length_image:] = 0.
         return (img, img_a, img_b), 0
 
 
@@ -446,3 +446,12 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
             img.crop((left, top, right, bottom))
 
         img.save(img_path, img_format)
+
+
+# if __name__ == '__main__':
+#     dataset = DoubleMNIST()
+#     trainloader = torch.utils.data.DataLoader(dataset)
+#     print(trainloader)
+#     for data, _ in trainloader:
+#         print(torch.sum(data[0]))
+#         sys.exit()
