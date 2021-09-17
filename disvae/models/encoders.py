@@ -90,12 +90,13 @@ class EncoderBurgess(nn.Module):
 
 
 class EncoderDoubleburgess(nn.Module):
-    def __init__(self, img_size, latent_dim=10, latent_dim_common=8):
+    def __init__(self, img_size, latent_dim, latent_dim_common):
         super(EncoderDoubleburgess, self).__init__()
         self.latent_dim_common = latent_dim_common
-        self.latent_dim_unique = latent_dim - self.latent_dim_common
-        self.encoder1 = get_encoder("Burgess")(img_size, latent_dim)
-        self.encoder2 = get_encoder('Burgess')(img_size, latent_dim)
+        self.latent_dim_unique = (latent_dim - self.latent_dim_common) // 2  # ASSERT THIS IS AN INTEGER FOR THIS TO WORK
+        self.latent_dim_encoder = self.latent_dim_unique + self.latent_dim_common
+        self.encoder1 = get_encoder("Burgess")(img_size, self.latent_dim_encoder)
+        self.encoder2 = get_encoder('Burgess')(img_size, self.latent_dim_encoder)
 
     def forward(self, x_a, x_b):
         mu1, logvar1 = self.encoder1(x_a)

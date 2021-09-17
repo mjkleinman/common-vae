@@ -81,6 +81,9 @@ def parse_arguments(args_to_parse):
     model.add_argument('-z', '--latent-dim', type=int,
                        default=default_config['latent_dim'],
                        help='Dimension of the latent variable.')
+    model.add_argument('-zu', '--latent-dim-unq', type=int,
+                       default=4,
+                       help='Dimension of the latent variable (unq part).'),
     model.add_argument('-l', '--loss',
                        default=default_config['loss'], choices=LOSSES,
                        help="Type of VAE loss function to use.")
@@ -201,7 +204,7 @@ def main(args):
 
         # PREPARES MODEL
         args.img_size = get_img_size(args.dataset)  # stores for metadata
-        model = init_specific_model(args.model_type, args.img_size, args.latent_dim)
+        model = init_specific_model(args.model_type, args.img_size, args.latent_dim, args.latent_dim_unq)
         logger.info('Num parameters in model: {}'.format(get_n_param(model)))
 
         # TRAINS
