@@ -28,7 +28,7 @@ def get_loss_f(loss_name, **kwargs_parse):
     elif loss_name == "VAE":
         return BetaHLoss(beta=1, **kwargs_all)
     elif loss_name == "CVAE":
-        return CommonLatentLoss(gamma=kwargs_parse["betaB_G"], **kwargs_all)
+        return CommonLatentLoss(gamma=1, **kwargs_all)
     elif loss_name == "betaB":
         return BetaBLoss(C_init=kwargs_parse["betaB_initC"],
                          C_fin=kwargs_parse["betaB_finC"],
@@ -394,7 +394,7 @@ class BtcvaeLoss(BaseLoss):
 
 
 class CommonLatentLoss(BaseLoss):
-    def __init__(self, gamma=100., **kwargs):
+    def __init__(self, gamma, **kwargs):
         super().__init__(**kwargs)
         self.gamma = gamma
 
@@ -409,8 +409,8 @@ class CommonLatentLoss(BaseLoss):
         kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer) + _kl_normal_loss(mu_u2, logvar_u2, storer)
         kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer) + _kl_normal_loss(mu_c2, logvar_c2, storer)
         klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
-        kl_loss = kl_loss_u + kl_loss_c  # todo: scale the c
-        loss = rec_loss + self.gamma * kl_loss + klqq_loss
+        kl_loss = kl_loss_u + 0.5 * kl_loss_c  # todo: scale the c
+        loss = rec_loss + self.gamma * kl_loss + 10 * klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())
