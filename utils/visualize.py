@@ -76,9 +76,9 @@ class Visualizer():
         self.model_dir = model_dir
         self.dataset = dataset
         self.upsample_factor = upsample_factor
-        if loss_of_interest is not None:
-            self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE),
-                                              loss_of_interest)
+        # if loss_of_interest is not None:
+        #     self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE),
+        #                                       loss_of_interest)
 
     def _get_traversal_range(self, mean=0, std=1):
         """Return the corresponding traversal range in absolute terms."""
