@@ -406,16 +406,16 @@ class CommonLatentLoss(BaseLoss):
                                         distribution=self.rec_dist)
 
         mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2 = latent_dist
-        kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer) + _kl_normal_loss(mu_u2, logvar_u2, storer)
-        kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer) + _kl_normal_loss(mu_c2, logvar_c2, storer)
+        kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer, '_u1') + _kl_normal_loss(mu_u2, logvar_u2, storer, '_u2')
+        kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer, '_c') + _kl_normal_loss(mu_c2, logvar_c2, storer, '_c')
         klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
-        kl_loss = kl_loss_u + 0.1 * kl_loss_c  # todo: scale the c
-        loss = rec_loss + self.gamma * kl_loss + 10 * klqq_loss
+        kl_loss = 100 * kl_loss_u + 0.1 * kl_loss_c  # todo: scale the c
+        loss = rec_loss + self.gamma * kl_loss + 2.5 * klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())
-            storer['kl_loss_u'].append(kl_loss_u.item())
-            storer['kl_loss_c'].append(kl_loss_c.item())
+            storer['klu_loss'].append(kl_loss_u.item())
+            storer['klc_loss'].append(kl_loss_c.item())
             storer['klqq_loss'].append(klqq_loss.item())
         return loss
 
@@ -478,7 +478,7 @@ def _reconstruction_loss(data, recon_data, distribution="bernoulli", storer=None
     return loss
 
 
-def _kl_normal_loss(mean, logvar, storer=None):
+def _kl_normal_loss(mean, logvar, storer=None, latentLabel=''):
     """
     Calculates the KL divergence between a normal distribution
     with diagonal covariance and a unit normal distribution.
@@ -504,7 +504,8 @@ def _kl_normal_loss(mean, logvar, storer=None):
     if storer is not None:
         storer['kl_loss'].append(total_kl.item())
         for i in range(latent_dim):
-            storer['kl_loss_' + str(i)].append(latent_kl[i].item())
+            # Note: I'm overwriting the common latent label to only save one set
+            storer['kl_loss_' + str(i) + latentLabel].append(latent_kl[i].item())
 
     return total_kl
 
