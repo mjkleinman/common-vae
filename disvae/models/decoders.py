@@ -9,8 +9,8 @@ from torch import nn
 
 # ALL decoders should be called Decoder<Model>
 def get_decoder(model_type):
-    # model_type = model_type.lower().capitalize()
-    model_type = "Burgess"
+    model_type = model_type.lower().capitalize()
+    # model_type = "Burgess"
     return eval("Decoder{}".format(model_type))
 
 
@@ -82,4 +82,17 @@ class DecoderBurgess(nn.Module):
         # Sigmoid activation for final conv layer
         x = torch.sigmoid(self.convT3(x))
 
+        return x
+
+
+class DecoderDoubleburgess(nn.Module):
+    def __init__(self, img_size, latent_dim):
+        super(DecoderDoubleburgess, self).__init__()
+        self.decoder1 = get_decoder("Burgess")(img_size, latent_dim)
+        self.decoder2 = get_decoder('Burgess')(img_size, latent_dim)
+
+    def forward(self, z):
+        x_a = self.decoder1(z)
+        x_b = self.decoder2(z)
+        x = torch.cat((x_a, x_b), dim=1)
         return x

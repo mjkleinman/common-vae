@@ -24,7 +24,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "celeba": "CelebA",
                  "chairs": "Chairs",
                  "dmnist": "DoubleMNIST",
-                 "dceleba": "DoubleCelebA"}
+                 "dceleba": "DoubleCelebA",
+                 "pceleba": "PairCelebA"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -312,6 +313,31 @@ class DoubleCelebA(CelebA):
         return (img, img_a, img_b), 0
 
 
+# https://github.com/mickaelChen/GMV/blob/master/mathieu.py
+class PairCelebA(CelebA):
+    def __init__(self, dataPath=os.path.join(DIR, '../data/celeba/img_align_celeba'),
+                 labelFile=os.path.join(DIR, "../data/celeba/identity_CelebA.txt"), **kwargs):
+        super(PairCelebA, self).__init__()
+        self.dataPath = dataPath
+        with open(labelFile, 'r') as f:
+            lines = np.array([p.split() for p in f.readlines()])
+        self.files = lines[:, 0]
+        self.labels = lines[:, 1].astype(int)
+        # self.transform = transform
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        label = self.labels[idx]
+        file1 = self.files[idx]
+        file2 = np.random.choice(self.files[self.labels == label])
+        img1 = self.transforms(Image.open(os.path.join(self.dataPath, file1)))
+        img2 = self.transforms(Image.open(os.path.join(self.dataPath, file2)))
+        img_cat = torch.cat((img1, img2), dim=0)
+        return (img_cat, img1, img2), 0  # update so output is a concatednated vector of both (or randomly do)
+
+
 class Chairs(datasets.ImageFolder):
     """Chairs Dataset from [1].
 
@@ -467,6 +493,27 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 
         img.save(img_path, img_format)
 
+
+if __name__ == '__main__':
+
+    dataPath = ""
+    dataset = PairCelebA()
+    # Dataset = DoubleCeleb  # CelebA
+    # logger = logging.getLogger(__name__)
+    # dataset = Dataset(logger=logger)
+    pin_memory = torch.cuda.is_available
+    dataloader = DataLoader(dataset,
+                            batch_size=64,
+                            shuffle=False,
+                            pin_memory=pin_memory)
+
+    # # print((dataloader.dataset[2]))
+    # # print(dataloader.dataset[97231])
+    for (input1, input2), _ in dataloader:
+        print(input1)
+        print(input2)
+        import sys
+        sys.exit()
 
 # if __name__ == '__main__':
 #     dataset = DoubleMNIST()
