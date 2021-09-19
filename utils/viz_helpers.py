@@ -32,7 +32,7 @@ def get_samples(dataset, num_samples, idcs=[]):
                                   shuffle=idcs is None)
 
     idcs += random.sample(range(len(data_loader.dataset)), num_samples - len(idcs))
-    samples = torch.stack([data_loader.dataset[i][0][0] for i in idcs], dim=0)
+    samples = torch.stack([data_loader.dataset[i][0][0][:3, ...] for i in idcs], dim=0)
     samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
     samples_b = torch.stack([data_loader.dataset[i][0][2] for i in idcs], dim=0)
     print("Selected idcs: {}".format(idcs))

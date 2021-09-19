@@ -1,6 +1,8 @@
 # TODO:
 
+Update visualizer to work for the paired celebA dataset.
 Update so that output can be for each view as opposed to the combined image. Or concatenate the images.
+Include the KL values on the plots.
 
 
 # Disentangled VAE [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/YannDubs/disentangling-vae/blob/master/LICENSE) [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/release/python-360/)
