@@ -397,11 +397,11 @@ class BtcvaeLoss(BaseLoss):
 
 
 class CommonLatentLoss(BaseLoss):
-    def __init__(self, gamma, gamma_klc, gamma_klu, gamma_klqq, **kwargs):
+    def __init__(self, gamma, gamma_klu, gamma_klc, gamma_klqq, **kwargs):
         super().__init__(**kwargs)
         self.gamma = gamma
-        self.gamma_klc = gamma_klc
         self.gamma_klu = gamma_klu
+        self.gamma_klc = gamma_klc
         self.gamma_klqq = gamma_klqq
 
     def __call__(self, data, recon_data, latent_dist, is_train, storer, **kwargs):
