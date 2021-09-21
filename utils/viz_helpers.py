@@ -32,7 +32,10 @@ def get_samples(dataset, num_samples, idcs=[]):
                                   shuffle=idcs is None)
 
     idcs += random.sample(range(len(data_loader.dataset)), num_samples - len(idcs))
-    samples = torch.stack([data_loader.dataset[i][0][0][:3, ...] for i in idcs], dim=0)
+    nchannels = 3
+    if dataset == 'tmnist':
+        nchannels = 1
+    samples = torch.stack([data_loader.dataset[i][0][0][:nchannels, ...] for i in idcs], dim=0)
     samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
     samples_b = torch.stack([data_loader.dataset[i][0][2] for i in idcs], dim=0)
     print("Selected idcs: {}".format(idcs))
@@ -62,7 +65,12 @@ def read_loss_from_file(log_file_path, loss_to_fetch):
     logs = pd.read_csv(log_file_path)
     df_last_epoch_loss = logs[logs.loc[:, EPOCH] == logs.loc[:, EPOCH].max()]
     df_last_epoch_loss = df_last_epoch_loss.loc[df_last_epoch_loss.loc[:, LOSS].str.startswith(loss_to_fetch), :]
-    df_last_epoch_loss.loc[:, LOSS] = df_last_epoch_loss.loc[:, LOSS].str.replace(loss_to_fetch, "").astype(int)
+    # print(df_last_epoch_loss)
+    # import pdb
+    # pdb.set_trace()
+    # import sys
+    # sys.exit()
+    # df_last_epoch_loss.loc[:, LOSS] = df_last_epoch_loss.loc[:, LOSS].str.replace(loss_to_fetch, "").astype(int)
     df_last_epoch_loss = df_last_epoch_loss.sort_values(LOSS).loc[:, "Value"]
     return list(df_last_epoch_loss)
 

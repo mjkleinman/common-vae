@@ -25,6 +25,7 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "celeba": "CelebA",
                  "chairs": "Chairs",
                  "dmnist": "DoubleMNIST",
+                 "tmnist": "TangleMNIST",
                  "dceleba": "DoubleCelebA",
                  "pceleba": "PairCelebA"}
 DATASETS = list(DATASETS_DICT.keys())

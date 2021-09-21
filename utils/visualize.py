@@ -75,6 +75,9 @@ class Visualizer():
         self.save_images = save_images
         self.model_dir = model_dir
         self.dataset = dataset
+        self.nchannels = 3
+        if self.dataset == 'tmnist':
+            self.nchannels = 1
         self.upsample_factor = upsample_factor
         # if loss_of_interest is not None:
         #     self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE),
@@ -163,7 +166,7 @@ class Visualizer():
             of latent distribution.
         """
         latent_samples = latent_samples.to(self.device)
-        return self.model.decoder(latent_samples)[:, :3, ...].cpu()  # for the multiview, output has 6 channels. TODO: Clean this up
+        return self.model.decoder(latent_samples)[:, :self.nchannels, ...].cpu()  # for the multiview, output has 6 channels. TODO: Clean this up
 
     def generate_samples(self, size=(8, 8)):
         """Plot generated samples from the prior and decoding.
@@ -222,7 +225,7 @@ class Visualizer():
             originals_a = data_a.to(self.device)[:n_samples, ...]
             originals_b = data_b.to(self.device)[:n_samples, ...]
             recs, _, _ = self.model(originals_a, originals_b)
-            recs = recs[:, :3, ...]
+            recs = recs[:, :self.nchannels, ...]
 
         originals = originals.cpu()
         recs = recs.view(-1, *self.model.img_size).cpu()
