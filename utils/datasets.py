@@ -14,6 +14,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, datasets
+from torchvision.transforms.functional import InterpolationMode
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 COLOUR_BLACK = 0
@@ -437,6 +438,32 @@ class DoubleMNIST(MNIST):
         return (img, img_a, img_b), 0
 
 
+class TangleMNIST(MNIST):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def __getitem__(self, index):
+        img, target = self.data[index], int(self.targets[index])
+        idx_img2 = np.random.choice(np.flatnonzero(self.targets == target))
+        img_b = self.data[idx_img2]
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        x_a = Image.fromarray(img.numpy(), mode='L')
+        x_b = Image.fromarray(img_b.numpy(), mode='L')
+
+        # taken from https://github.com/jameschapman19/cca_zoo/blob/main/cca_zoo/data/toy.py
+        # get random angles of rotation
+        rot_a, rot_b = torch.rand(2) * 90 - 45
+        x_a_rotate = transforms.functional.rotate(x_a, rot_a.item(), interpolation=InterpolationMode.BILINEAR)
+        x_b_rotate = transforms.functional.rotate(x_b, rot_b.item(), interpolation=InterpolationMode.BILINEAR)
+        # convert images to tensors
+        x_a_rotate = self.transform(x_a_rotate)
+        x_b_rotate = self.transform(x_b_rotate)
+        img_cat = torch.cat((x_a_rotate, x_b_rotate), dim=0)
+        return (img_cat, x_a_rotate, x_b_rotate), 0
+
+
 class FashionMNIST(datasets.FashionMNIST):
     """Fashion Mnist wrapper. Docs: `datasets.FashionMNIST.`"""
     img_size = (1, 32, 32)
@@ -497,7 +524,7 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 if __name__ == '__main__':
 
     dataPath = ""
-    dataset = PairCelebA()
+    dataset = TangleMNIST()
     # Dataset = DoubleCeleb  # CelebA
     # logger = logging.getLogger(__name__)
     # dataset = Dataset(logger=logger)
@@ -509,7 +536,7 @@ if __name__ == '__main__':
 
     # # print((dataloader.dataset[2]))
     # # print(dataloader.dataset[97231])
-    for (input1, input2), _ in dataloader:
+    for (_, input1, input2), _ in dataloader:
         print(input1)
         print(input2)
         import sys
