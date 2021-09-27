@@ -13,17 +13,19 @@ import random
 MODELS = ["Burgess", "Doubleburgess"]
 
 
-def init_specific_model(model_type, img_size, latent_dim, latent_dim_unq):
+def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, latent_dim_unq):
     """Return an instance of a VAE with encoder and decoder from `model_type`."""
-    model_type = model_type.lower().capitalize()
-    if model_type not in MODELS:
+    model_type_enc = model_type_enc.lower().capitalize()
+    model_type_dec = model_type_dec.lower().capitalize()
+    if model_type_enc not in MODELS or model_type_dec not in MODELS:
         err = "Unkown model_type={}. Possible values: {}"
-        raise ValueError(err.format(model_type, MODELS))
+        raise ValueError(err.format(model_type_enc + " " + model_type_dec, MODELS))  # should print decoder model type too
 
-    encoder = get_encoder(model_type)
-    decoder = get_decoder(model_type)
+    encoder = get_encoder(model_type_enc)
+    decoder = get_decoder(model_type_dec)
     model = DoubleVAE(img_size, encoder, decoder, latent_dim, latent_dim_unq)  # changed to Double
-    model.model_type = model_type  # store to help reloading
+    model.model_type_enc = model_type_enc  # store to help reloading
+    model.model_type_dec = model_type_dec
     return model
 
 

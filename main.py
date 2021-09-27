@@ -75,7 +75,10 @@ def parse_arguments(args_to_parse):
 
     # Model Options
     model = parser.add_argument_group('Model specfic options')
-    model.add_argument('-m', '--model-type',
+    model.add_argument('-m', '--model-type-enc',
+                       default=default_config['model'], choices=MODELS,
+                       help='Type of encoder and decoder to use.')
+    model.add_argument('-md', '--model-type-dec',
                        default=default_config['model'], choices=MODELS,
                        help='Type of encoder and decoder to use.')
     model.add_argument('-z', '--latent-dim', type=int,
@@ -213,7 +216,7 @@ def main(args):
 
         # PREPARES MODEL
         args.img_size = get_img_size(args.dataset)  # stores for metadata
-        model = init_specific_model(args.model_type, args.img_size, args.latent_dim, args.latent_dim_unq)
+        model = init_specific_model(args.model_type_enc, args.model_type_dec, args.img_size, args.latent_dim, args.latent_dim_unq)
         logger.info('Num parameters in model: {}'.format(get_n_param(model)))
 
         # TRAINS
