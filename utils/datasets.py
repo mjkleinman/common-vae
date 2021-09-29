@@ -26,6 +26,7 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "chairs": "Chairs",
                  "dmnist": "DoubleMNIST",
                  "tmnist": "TangleMNIST",
+                 "rmnist": "DoubleRotateMNIST",
                  "dceleba": "DoubleCelebA",
                  "pceleba": "PairCelebA"}
 DATASETS = list(DATASETS_DICT.keys())
@@ -465,6 +466,31 @@ class TangleMNIST(MNIST):
         return (img_cat, x_a_rotate, x_b_rotate), 0
 
 
+class DoubleRotateMNIST(MNIST):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def __getitem__(self, index):
+        img = self.data[index]
+        img_b = img.clone()
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        x_a = Image.fromarray(img.numpy(), mode='L')
+        x_b = Image.fromarray(img_b.numpy(), mode='L')
+
+        # get random fixed angles of rotation to apply to x_a and x_b
+        rot_a = torch.tensor(30.0)
+        rot_b = torch.tensor(-30.0)
+        x_a_rotate = transforms.functional.rotate(x_a, rot_a.item(), interpolation=InterpolationMode.BILINEAR)
+        x_b_rotate = transforms.functional.rotate(x_b, rot_b.item(), interpolation=InterpolationMode.BILINEAR)
+        # convert images to tensors
+        x_a_rotate = self.transform(x_a_rotate)
+        x_b_rotate = self.transform(x_b_rotate)
+        img_cat = torch.cat((x_a_rotate, x_b_rotate), dim=0)
+        return (img_cat, x_a_rotate, x_b_rotate), 0
+
+
 class FashionMNIST(datasets.FashionMNIST):
     """Fashion Mnist wrapper. Docs: `datasets.FashionMNIST.`"""
     img_size = (1, 32, 32)
@@ -525,7 +551,7 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 if __name__ == '__main__':
 
     dataPath = ""
-    dataset = TangleMNIST()
+    dataset = DoubleRotateMNIST()
     # Dataset = DoubleCeleb  # CelebA
     # logger = logging.getLogger(__name__)
     # dataset = Dataset(logger=logger)

@@ -76,7 +76,7 @@ class Visualizer():
         self.model_dir = model_dir
         self.dataset = dataset
         self.nchannels = 3
-        if self.dataset == 'tmnist':
+        if self.dataset == 'tmnist' or self.dataset == 'rmnist':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
         # if loss_of_interest is not None:
