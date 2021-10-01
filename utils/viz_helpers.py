@@ -75,6 +75,28 @@ def read_loss_from_file(log_file_path, loss_to_fetch):
     return list(df_last_epoch_loss)
 
 
+def read_loss_from_file_common(log_file_path, loss_to_fetch):
+    """
+    This should return the unique component 1, common component, and unique component 2
+    """
+    EPOCH = "Epoch"
+    LOSS = "Loss"
+    logs = pd.read_csv(log_file_path)
+    df_last_epoch_loss = logs[logs.loc[:, EPOCH] == logs.loc[:, EPOCH].max()]
+    df_last_epoch_loss_c = df_last_epoch_loss.loc[df_last_epoch_loss.loc[:, LOSS].str.endswith("_c"), :]
+    df_last_epoch_loss_u1 = df_last_epoch_loss.loc[df_last_epoch_loss.loc[:, LOSS].str.endswith("_u1"), :]
+    df_last_epoch_loss_u2 = df_last_epoch_loss.loc[df_last_epoch_loss.loc[:, LOSS].str.endswith("_u2"), :]
+
+    df_last_epoch_loss_c.loc[:, LOSS] = df_last_epoch_loss_c.loc[:, LOSS].str.replace("_c", "").str.replace(loss_to_fetch, "").astype(int)
+    df_last_epoch_loss_c = df_last_epoch_loss_c.sort_values(LOSS).loc[:, "Value"]
+    df_last_epoch_loss_u1.loc[:, LOSS] = df_last_epoch_loss_u1.loc[:, LOSS].str.replace("_u1", "").str.replace(loss_to_fetch, "").astype(int)
+    df_last_epoch_loss_u1 = df_last_epoch_loss_u1.sort_values(LOSS).loc[:, "Value"]
+    df_last_epoch_loss_u2.loc[:, LOSS] = df_last_epoch_loss_u2.loc[:, LOSS].str.replace("_u2", "").str.replace(loss_to_fetch, "").astype(int)
+    df_last_epoch_loss_u2 = df_last_epoch_loss_u2.sort_values(LOSS).loc[:, "Value"]
+
+    return list(df_last_epoch_loss_c), list(df_last_epoch_loss_u1), list(df_last_epoch_loss_u2)
+
+
 def add_labels(input_image, labels):
     """Adds labels next to rows of an image.
 

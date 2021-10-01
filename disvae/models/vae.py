@@ -45,6 +45,7 @@ class VAE(nn.Module):
             raise RuntimeError("{} sized images not supported. Only (None, 32, 32) and (None, 64, 64) supported. Build your own architecture or reshape images!".format(img_size))
 
         self.latent_dim = latent_dim
+        self.latent_dim_unq = latent_dim_unq
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
         self.encoder = encoder(img_size, self.latent_dim, self.latent_dim - 2 * latent_dim_unq)  # e = c + u
@@ -105,7 +106,7 @@ class VAE(nn.Module):
 
 
 class DoubleVAE(VAE):
-    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=4):
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq):
         super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
 
     def reparameterize_double(self, mean_u1, logvar_u1, mean_c1, logvar_c1, mean_u2, logvar_u2, mean_c2, logvar_c2):

@@ -11,7 +11,7 @@ from torch.autograd import Variable
 from torchvision.utils import make_grid, save_image
 
 from utils.datasets import get_background
-from utils.viz_helpers import (read_loss_from_file, add_labels, make_grid_img,
+from utils.viz_helpers import (read_loss_from_file, read_loss_from_file_common, add_labels, make_grid_img,
                                sort_list_by_other, FPS_GIF, concatenate_pad)
 
 TRAIN_FILE = "train_losses.log"
@@ -79,9 +79,9 @@ class Visualizer():
         if self.dataset == 'tmnist' or self.dataset == 'rmnist':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
-        # if loss_of_interest is not None:
-        #     self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE),
-        #                                       loss_of_interest)
+        if loss_of_interest is not None:
+            self.losses_c, self.losses_u1, self.losses_u2 = read_loss_from_file_common(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
+            self.losses = self.losses_u1 + self.losses_c + self.losses_u2
 
     def _get_traversal_range(self, mean=0, std=1):
         """Return the corresponding traversal range in absolute terms."""
@@ -128,6 +128,9 @@ class Visualizer():
                 post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
                 samples = self.model.reparameterize(post_mean, post_logvar)
                 samples = samples.cpu().repeat(n_samples, 1)
+                print(samples.shape)
+                print(n_samples)
+                sys.exit()
                 post_mean_idx = post_mean.cpu()[0, idx]
                 post_std_idx = torch.exp(post_logvar / 2).cpu()[0, idx]
 
@@ -269,16 +272,20 @@ class Visualizer():
         n_latents = n_latents if n_latents is not None else self.model.latent_dim
         latent_samples = [self._traverse_line(dim, n_per_latent, data=data, data_a=data_a, data_b=data_b)
                           for dim in range(self.latent_dim)]
+        print(torch.cat(latent_samples, dim=0).shape)
         decoded_traversal = self._decode_latents(torch.cat(latent_samples, dim=0))
 
+        is_reorder_latents = False
         if is_reorder_latents:
             n_images, *other_shape = decoded_traversal.size()
             n_rows = n_images // n_per_latent
+            print(n_images)
             decoded_traversal = decoded_traversal.reshape(n_rows, n_per_latent, *other_shape)
+            print(decoded_traversal.shape)
             # MK: removed for now because self.losses didn't have the correct shape extracting from model
-            # decoded_traversal = sort_list_by_other(decoded_traversal, self.losses)
-            # decoded_traversal = torch.stack(decoded_traversal, dim=0)
-            # print(decoded_traversal.size())
+            decoded_traversal = sort_list_by_other(decoded_traversal, self.losses)
+            decoded_traversal = torch.stack(decoded_traversal, dim=0)
+            print(decoded_traversal.size())
             decoded_traversal = decoded_traversal.reshape(n_images, *other_shape)
 
         decoded_traversal = decoded_traversal[range(n_per_latent * n_latents), ...]
@@ -338,7 +345,8 @@ class Visualizer():
         concatenated = Image.fromarray(concatenated)
 
         if is_show_text:
-            losses = sorted(self.losses, reverse=True)[:n_latents]
+            # losses = sorted(self.losses, reverse=True)[:n_latents]
+            losses = self.losses[:n_latents]
             labels = ['orig', 'recon'] + ["KL={:.4f}".format(l) for l in losses]
             concatenated = add_labels(concatenated, labels)
 
