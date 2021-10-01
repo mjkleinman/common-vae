@@ -49,8 +49,8 @@ def parse_arguments(args_to_parse):
                         help='Displays the loss on the figures (if applicable).')
     parser.add_argument('--is-posterior', action='store_true',
                         help='Traverses the posterior instead of the prior.')
-    parser.add_argument('--commond-idx-start', type=int, default=8)
-    parser.add_argument('--commond-idx-end', type=int, default=24)
+    parser.add_argument('--common-idx-start', type=int, default=8)
+    parser.add_argument('--common-idx-end', type=int, default=24)
     args = parser.parse_args()
 
     return args
