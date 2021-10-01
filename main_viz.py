@@ -49,6 +49,8 @@ def parse_arguments(args_to_parse):
                         help='Displays the loss on the figures (if applicable).')
     parser.add_argument('--is-posterior', action='store_true',
                         help='Traverses the posterior instead of the prior.')
+    parser.add_argument('--commond-idx-start', type=int, default=8)
+    parser.add_argument('--commond-idx-end', type=int, default=24)
     args = parser.parse_args()
 
     return args
@@ -110,14 +112,14 @@ def main(args):
         elif plot_type == "gif-traversals-common":
             viz.gif_traversals(samples[:args.n_cols, ...],
                                samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
-                               n_latents=args.n_rows, start_index=8, end_index=24, suffix="_common")
+                               n_latents=args.n_rows, start_index=args.common_idx_start, end_index=args.common_idx_end, suffix="_common")
         elif plot_type == "gif-traversals-unique":
             viz.gif_traversals(samples[:args.n_cols, ...],
                                samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
-                               n_latents=args.n_rows, start_index=0, end_index=8, suffix="_uniqueA")
+                               n_latents=args.n_rows, start_index=0, end_index=args.common_idx_start, suffix="_uniqueA")
             viz.gif_traversals(samples[:args.n_cols, ...],
                                samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
-                               n_latents=args.n_rows, start_index=24, end_index=32, suffix="_uniqueB")
+                               n_latents=args.n_rows, start_index=args.common_idx_end, end_index=model.latent_dim, suffix="_uniqueB")
         else:
             raise ValueError("Unkown plot_type={}".format(plot_type))
 
