@@ -10,7 +10,7 @@ from disvae.utils.modelIO import load_model, load_metadata
 
 
 PLOT_TYPES = ['generate-samples', 'data-samples', 'reconstruct', "traversals",
-              'reconstruct-traverse', "gif-traversals", "all"]
+              'reconstruct-traverse', "gif-traversals", "gif-traversals-common", "gif-traversals-unique", "all"]
 
 
 def parse_arguments(args_to_parse):
@@ -106,7 +106,18 @@ def main(args):
         elif plot_type == "gif-traversals":
             viz.gif_traversals(samples[:args.n_cols, ...],
                                samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
-                               n_latents=args.n_rows)
+                               n_latents=args.n_rows, start_index=0, end_index=model.latent_dim)
+        elif plot_type == "gif-traversals-common":
+            viz.gif_traversals(samples[:args.n_cols, ...],
+                               samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
+                               n_latents=args.n_rows, start_index=8, end_index=24, suffix="_common")
+        elif plot_type == "gif-traversals-unique":
+            viz.gif_traversals(samples[:args.n_cols, ...],
+                               samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
+                               n_latents=args.n_rows, start_index=0, end_index=8, suffix="_uniqueA")
+            viz.gif_traversals(samples[:args.n_cols, ...],
+                               samples_a[:args.n_cols, ...], samples_b[:args.n_cols, ...],
+                               n_latents=args.n_rows, start_index=24, end_index=32, suffix="_uniqueB")
         else:
             raise ValueError("Unkown plot_type={}".format(plot_type))
 

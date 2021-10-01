@@ -23,7 +23,10 @@ PLOT_NAMES = dict(generate_samples="samples.png",
                   reconstruct="reconstruct.png",
                   traversals="traversals.png",
                   reconstruct_traverse="reconstruct_traverse.png",
-                  gif_traversals="posterior_traversals.gif",)
+                  gif_traversals="posterior_traversals.gif",
+                  gif_traversals_common="posterior_traversals_common.gif",
+                  gif_traversals_uniqueA="posterior_traversals_uniqueA.gif",
+                  gif_traversals_uniqueB="posterior_traversals_uniqueB.gif")
 
 
 class Visualizer():
@@ -81,8 +84,9 @@ class Visualizer():
             self.nchannels = 1
         self.upsample_factor = upsample_factor
         if loss_of_interest is not None:
-            self.losses_c, self.losses_u1, self.losses_u2 = read_loss_from_file_common(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
-            self.losses = self.losses_u1 + self.losses_c + self.losses_u2
+            # self.losses_c, self.losses_u1, self.losses_u2 = read_loss_from_file_common(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
+            # self.losses = self.losses_u1 + self.losses_c + self.losses_u2
+            self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
 
     def _get_traversal_range(self, mean=0, std=1):
         """Return the corresponding traversal range in absolute terms."""
@@ -129,9 +133,6 @@ class Visualizer():
                 post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
                 samples = self.model.reparameterize(post_mean, post_logvar)
                 samples = samples.cpu().repeat(n_samples, 1)
-                print(samples.shape)
-                print(n_samples)
-                sys.exit()
                 post_mean_idx = post_mean.cpu()[0, idx]
                 post_std_idx = torch.exp(post_logvar / 2).cpu()[0, idx]
 
@@ -245,7 +246,9 @@ class Visualizer():
                    is_reorder_latents=False,
                    n_per_latent=8,
                    n_latents=None,
-                   is_force_return=False):
+                   is_force_return=False,
+                   start_index=0,
+                   end_index=None):
         """Plot traverse through all latent dimensions (prior or posterior) one
         by one and plots a grid of images where each row corresponds to a latent
         traversal of one latent dimension.
@@ -270,23 +273,23 @@ class Visualizer():
         is_force_return : bool, optional
             Force returning instead of saving the image.
         """
+        end_index = end_index if end_index is not None else self.model.latent_dim
         n_latents = n_latents if n_latents is not None else self.model.latent_dim
         latent_samples = [self._traverse_line(dim, n_per_latent, data=data, data_a=data_a, data_b=data_b)
-                          for dim in range(self.latent_dim)]
-        print(torch.cat(latent_samples, dim=0).shape)
-        decoded_traversal = self._decode_latents(torch.cat(latent_samples, dim=0))
+                          for dim in range(start_index, end_index)]
+        latent_samples = torch.cat(latent_samples, dim=0)
+        decoded_traversal = self._decode_latents(latent_samples)
 
-        is_reorder_latents = False
         if is_reorder_latents:
+
             n_images, *other_shape = decoded_traversal.size()
             n_rows = n_images // n_per_latent
-            print(n_images)
             decoded_traversal = decoded_traversal.reshape(n_rows, n_per_latent, *other_shape)
-            print(decoded_traversal.shape)
+
             # MK: removed for now because self.losses didn't have the correct shape extracting from model
-            decoded_traversal = sort_list_by_other(decoded_traversal, self.losses)
+            losses = self.losses[start_index:end_index]
+            decoded_traversal = sort_list_by_other(decoded_traversal, losses)
             decoded_traversal = torch.stack(decoded_traversal, dim=0)
-            print(decoded_traversal.size())
             decoded_traversal = decoded_traversal.reshape(n_images, *other_shape)
 
         decoded_traversal = decoded_traversal[range(n_per_latent * n_latents), ...]
@@ -354,7 +357,7 @@ class Visualizer():
         filename = os.path.join(self.model_dir, PLOT_NAMES["reconstruct_traverse"])
         concatenated.save(filename)
 
-    def gif_traversals(self, data, data_a, data_b, n_latents=None, n_per_gif=15):
+    def gif_traversals(self, data, data_a, data_b, n_latents=None, n_per_gif=15, start_index=0, end_index=32, suffix=""):
         """Generates a grid of gifs of latent posterior traversals where the rows
         are the latent dimensions and the columns are random images.
 
@@ -378,7 +381,8 @@ class Visualizer():
             grid = self.traversals(data=data[i:i + 1, ...], data_a=data_a[i:i + 1, ...], data_b=data_b[i:i + 1, ...],
                                    is_reorder_latents=True,
                                    n_per_latent=n_per_gif, n_latents=n_latents,
-                                   is_force_return=True)
+                                   is_force_return=True,
+                                   start_index=start_index, end_index=end_index)
 
             height, width, c = grid.shape
             padding_width = (width - width_col * n_per_gif) // (n_per_gif + 1)
@@ -392,7 +396,7 @@ class Visualizer():
         all_cols = [concatenate_pad(cols, pad_size=2, pad_values=pad_values, axis=1)
                     for cols in all_cols]
 
-        filename = os.path.join(self.model_dir, PLOT_NAMES["gif_traversals"])
+        filename = os.path.join(self.model_dir, PLOT_NAMES["gif_traversals" + suffix])
         imageio.mimsave(filename, all_cols, fps=FPS_GIF)
 
 
