@@ -14,6 +14,7 @@ from utils.datasets import get_background
 from utils.viz_helpers import (read_loss_from_file, read_loss_from_file_common, add_labels, make_grid_img,
                                sort_list_by_other, FPS_GIF, concatenate_pad)
 
+# this is me testing that branches work
 TRAIN_FILE = "train_losses.log"
 DECIMAL_POINTS = 3
 GIF_FILE = "training.gif"
