@@ -349,8 +349,8 @@ class Visualizer():
         concatenated = Image.fromarray(concatenated)
 
         if is_show_text:
-            # losses = sorted(self.losses, reverse=True)[:n_latents]
-            losses = self.losses[:n_latents]
+            losses = sorted(self.losses, reverse=True)[:n_latents]
+            # losses = self.losses[:n_latents]
             labels = ['orig', 'recon'] + ["KL={:.4f}".format(l) for l in losses]
             concatenated = add_labels(concatenated, labels)
 
