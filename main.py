@@ -53,6 +53,7 @@ def parse_arguments(args_to_parse):
                          help='Disables CUDA training, even when have one.')
     general.add_argument('-s', '--seed', type=int, default=default_config['seed'],
                          help='Random seed. Can be `None` for stochastic behavior.')
+    general.add_argument('--device', default='cuda')
 
     # Learning options
     training = parser.add_argument_group('Training specific options')
@@ -195,7 +196,8 @@ def main(args):
     logger.addHandler(stream)
 
     set_seed(args.seed)
-    device = get_device(is_gpu=not args.no_cuda)
+    device = args.device #get_device(is_gpu=not args.no_cuda)# args.device
+    print(device)
     exp_dir = os.path.join(RES_DIR, args.name)
     logger.info("Root directory for saving and loading experiments: {}".format(exp_dir))
 
@@ -226,7 +228,6 @@ def main(args):
         gif_visualizer = GifTraversalsTraining(model, args.dataset, exp_dir)
         loss_f = get_loss_f(args.loss,
                             n_data=len(train_loader.dataset),
-                            device=device,
                             **vars(args))
         trainer = Trainer(model, optimizer, loss_f,
                           device=device,
@@ -251,7 +252,6 @@ def main(args):
                                       logger=logger)
         loss_f = get_loss_f(args.loss,
                             n_data=len(test_loader.dataset),
-                            device=device,
                             **vars(args))
         evaluator = Evaluator(model, loss_f,
                               device=device,

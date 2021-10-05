@@ -42,7 +42,7 @@ def process_command(command):
 # Comparing the tangling and the rotated mnist dataset
 #######################################################################################
 commands = []
-device = 'cpu'
+device = 'cuda'
 datasets = ['rmnist', 'tmnist']
 epoch = 50
 zs = [8]
@@ -53,19 +53,36 @@ klqqs = [0.5, 5, 50]
 for dataset in datasets:
     for z, zu in zip(zs, zus):
         for klqq in klqqs:
-            command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+            command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
             commands += process_command(command)
 
 #######################################################################################
 # CelebA split
-#######################################################################################
-
+########################################################################################
+#epoch = 100
+#dataset = 'dceleba'
+#z = 64
+#zu = 16
+#klqq = 10
+#klu = 10
+#device = 'cuda'
+#command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+#commands += process_command(command) 
 #######################################################################################
 # CelebA paired
 #######################################################################################
-
+#epoch = 100
+#dataset = 'pceleba'
+#z = 64
+#zu = 16
+#klqq = 10
+#klu = 10
+#device = 'cuda'
+#command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+#commands += process_command(command) 
+##
 #######################################################################################
 # Video data
 #######################################################################################
 
-merge_commands(commands, gpu_cnt=1, put_device_id=True)
+merge_commands(commands, gpu_cnt=4, put_device_id=True)

@@ -111,17 +111,33 @@ class DoubleVAE(VAE):
 
     def reparameterize_double(self, mean_u1, logvar_u1, mean_c1, logvar_c1, mean_u2, logvar_u2, mean_c2, logvar_c2):
 
+        mean_c = 0.5 * (mean_c1 + mean_c2)
+        logvar_c = 0.5 * (logvar_c1 + logvar_c2)
+
         mean_a = torch.cat((mean_u1, mean_c1, mean_u2), dim=-1)
         mean_b = torch.cat((mean_u1, mean_c2, mean_u2), dim=-1)
         logvar_a = torch.cat((logvar_u1, logvar_c1, logvar_u2), dim=-1)
         logvar_b = torch.cat((logvar_u1, logvar_c2, logvar_u2), dim=-1)
+        mean = torch.cat((mean_u1, mean_c, mean_u2), dim=-1)
+        logvar = torch.cat((logvar_u1, logvar_c, logvar_u2), dim=-1)
+
         sample1 = self.reparameterize(mean_a, logvar_a)
         sample2 = self.reparameterize(mean_b, logvar_b)
-        # might be better to concatenate and use both samples
-        if random.random() > 0.5:
+        sample = self.reparameterize(mean, logvar)
+
+        # might be better to concatenate and use both samples or to take the average of the means
+        rand_num = random.random()
+        if rand_num > 0.5:
             return sample1
         else:
             return sample2
+        # else:
+        #     return sample
+
+        # this might not work b/c of the different batch size
+
+        # sample = torch.mean((sample1, sample2), dim=0)
+        # return sample
 
     def forward(self, x_a, x_b):
         latent_dists_double = self.encoder(x_a, x_b)
