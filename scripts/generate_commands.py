@@ -44,16 +44,17 @@ def process_command(command):
 commands = []
 device = 'cpu'
 datasets = ['rmnist', 'tmnist']
-epoch = 5
+epoch = 50
 zs = [8]
 zus = [2]
 klu = 10
-klqq = 50
+klqqs = [0.5, 5, 50]
 
 for dataset in datasets:
     for z, zu in zip(zs, zus):
-        command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
-        commands += process_command(command)
+        for klqq in klqqs:
+            command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+            commands += process_command(command)
 
 #######################################################################################
 # CelebA split
