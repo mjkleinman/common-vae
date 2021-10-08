@@ -28,7 +28,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "tmnist": "TangleMNIST",
                  "rmnist": "DoubleRotateMNIST",
                  "dceleba": "DoubleCelebA",
-                 "pceleba": "PairCelebA"}
+                 "pceleba": "PairCelebA",
+                 "ddsprites": "DoubleDSprites"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -190,6 +191,7 @@ class DSprites(DisentangledDataset):
         dataset_zip = np.load(self.train_data)
         self.imgs = dataset_zip['imgs']
         self.lat_values = dataset_zip['latents_values']
+        self.latents_sizes = np.array([3, 6, 40, 32, 32])
 
     def download(self):
         """Download the dataset."""
@@ -295,6 +297,62 @@ class CelebA(DisentangledDataset):
         # no label so return 0 (note that can't return None because)
         # dataloaders requires so
         return img, 0
+
+
+class DoubleDSprites(DSprites):
+    def __init__(self, **kwargs):
+        super(DoubleDSprites, self).__init__()
+        # self.latents_sizes = self.dataset_zip['latents_sizes']
+        self.latents_bases = np.concatenate((self.latents_sizes[::-1].cumprod()[::-1][1:],
+                                             np.array([1, ])))
+
+    # @staticmethod
+    def latent_to_index(self, latents):
+        return np.dot(latents, self.latents_bases).astype(int)
+
+    # @staticmethod
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, self.latents_sizes.size))
+        samples_b = np.zeros((size, self.latents_sizes.size))
+
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # get second sample
+        for lat_i, lat_size in enumerate(self.latents_sizes[:3]):
+            samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+
+        return samples, samples_b
+
+    def __getitem__(self, idx):
+        """Get the image of `idx`
+        Return
+        ------
+        sample : torch.Tensor
+            Tensor in [0.,1.] of shape `img_size`.
+
+        lat_value : np.array
+            Array of length 6, that gives the value of each factor of variation.
+        """
+
+        # todo: set random seed here?
+        latent_idx, latent_idx_b = self.sample_latent()
+        idx = self.latent_to_index(latent_idx).item()
+        idx_b = self.latent_to_index(latent_idx).item()
+
+        # stored image have binary and shape (H x W) so multiply by 255 to get pixel
+        # values + add dimension
+        sample = np.expand_dims(self.imgs[idx] * 255, axis=-1)
+        sample_b = np.expand_dims(self.imgs[idx_b] * 255, axis=-1)
+
+        # ToTensor transforms numpy.ndarray (H x W x C) in the range
+        # [0, 255] to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]
+        sample, sample_b = self.transforms(sample), self.transforms(sample_b)
+        img_cat = torch.cat((sample, sample_b), dim=0)
+
+        lat_value = self.lat_values[idx]
+        return (img_cat, sample, sample_b), lat_value
 
 
 class DoubleCelebA(CelebA):
@@ -551,21 +609,22 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 if __name__ == '__main__':
 
     dataPath = ""
-    dataset = DoubleRotateMNIST()
+    # dataset = DoubleRotateMNIST()
+    dataset = DoubleDSprites()
     # Dataset = DoubleCeleb  # CelebA
     # logger = logging.getLogger(__name__)
     # dataset = Dataset(logger=logger)
     pin_memory = torch.cuda.is_available
     dataloader = DataLoader(dataset,
-                            batch_size=64,
+                            batch_size=4,
                             shuffle=False,
                             pin_memory=pin_memory)
 
     # # print((dataloader.dataset[2]))
     # # print(dataloader.dataset[97231])
     for (_, input1, input2), _ in dataloader:
-        print(input1)
-        print(input2)
+        # print(input1)
+        print(torch.sum(input2))
         import sys
         sys.exit()
 
