@@ -339,7 +339,7 @@ class DoubleDSprites(DSprites):
         # todo: set random seed here?
         latent_idx, latent_idx_b = self.sample_latent()
         idx = self.latent_to_index(latent_idx).item()
-        idx_b = self.latent_to_index(latent_idx).item()
+        idx_b = self.latent_to_index(latent_idx_b).item()
 
         # stored image have binary and shape (H x W) so multiply by 255 to get pixel
         # values + add dimension
