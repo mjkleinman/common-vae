@@ -79,14 +79,14 @@ class Visualizer():
         self.save_images = save_images
         self.model_dir = model_dir
         self.dataset = dataset
-        self.nchannels = 3
-        if self.dataset == 'tmnist' or self.dataset == 'rmnist':
+        self.nchannels = 3 # todo: don't have this hardcoded if possible
+        if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
         if loss_of_interest is not None:
-            # self.losses_c, self.losses_u1, self.losses_u2 = read_loss_from_file_common(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
-            # self.losses = self.losses_u1 + self.losses_c + self.losses_u2
-            self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
+            self.losses_c, self.losses_u1, self.losses_u2 = read_loss_from_file_common(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
+            self.losses = self.losses_u1 + self.losses_c + self.losses_u2
+            # self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
 
     def _get_traversal_range(self, mean=0, std=1):
         """Return the corresponding traversal range in absolute terms."""
@@ -280,6 +280,7 @@ class Visualizer():
         latent_samples = torch.cat(latent_samples, dim=0)
         decoded_traversal = self._decode_latents(latent_samples)
 
+        is_reorder_latents = False
         if is_reorder_latents:
 
             n_images, *other_shape = decoded_traversal.size()
