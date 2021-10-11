@@ -232,7 +232,7 @@ class Visualizer():
             recs, _, _ = self.model(originals_a, originals_b)
             recs = recs[:, :self.nchannels, ...]
 
-        originals = originals.cpu()
+        originals = originals_a.cpu()
         recs = recs.view(-1, *self.model.img_size).cpu()
 
         to_plot = torch.cat([originals, recs]) if is_original else recs
