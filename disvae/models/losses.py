@@ -412,14 +412,14 @@ class CommonLatentLoss(BaseLoss):
                                         distribution=self.rec_dist)
 
         mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2 = latent_dist
-        kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer, '_u1') + _kl_normal_loss(mu_u2, logvar_u2, storer, '_u2')
-        kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer, '_c') + _kl_normal_loss(mu_c2, logvar_c2, storer, '_c')
+        kl_loss_u = _kl_normal_loss(mu_u1, logvar_u1, storer, '_u1', freeBits=0.1) + _kl_normal_loss(mu_u2, logvar_u2, storer, '_u2', freeBits=0.1)
+        kl_loss_c = _kl_normal_loss(mu_c1, logvar_c1, storer, '_c', freeBits=0.1) + _kl_normal_loss(mu_c2, logvar_c2, storer, '_c', freeBits=0.1)
         klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
         kl_loss = self.gamma_klu * kl_loss_u + self.gamma_klc * kl_loss_c  # todo: scale the c
 
-        anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
-                      if is_train else 1)
-        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss * anneal_reg
+        # anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
+        #              if is_train else 1)
+        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss 
 
         if storer is not None:
             storer['loss'].append(loss.item())
@@ -487,7 +487,7 @@ def _reconstruction_loss(data, recon_data, distribution="bernoulli", storer=None
     return loss
 
 
-def _kl_normal_loss(mean, logvar, storer=None, latentLabel=''):
+def _kl_normal_loss(mean, logvar, storer=None, latentLabel='', freeBits=None):
     """
     Calculates the KL divergence between a normal distribution
     with diagonal covariance and a unit normal distribution.
@@ -508,6 +508,8 @@ def _kl_normal_loss(mean, logvar, storer=None, latentLabel=''):
     latent_dim = mean.size(1)
     # batch mean of kl for each latent dimension
     latent_kl = 0.5 * (-1 - logvar + mean.pow(2) + logvar.exp()).mean(dim=0)
+    if freeBits is not None:
+        latent_kl = torch.maximum(latent_kl, torch.ones_like(latent_kl) * freeBits) 
     total_kl = latent_kl.sum()
 
     if storer is not None:
