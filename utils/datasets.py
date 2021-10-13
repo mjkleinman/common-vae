@@ -31,7 +31,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "rmnist": "DoubleRotateMNIST",
                  "dceleba": "DoubleCelebA",
                  "pceleba": "PairCelebA",
-                 "ddsprites": "DoubleDSprites"}
+                 "ddsprites": "DoubleDSprites",
+                 "dshapes": "DoubleShapes3D"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -630,15 +631,14 @@ class Shapes3D(Dataset):
                  transform=None, target_transform=None):
 
         path = Shapes3D.files['train']
-        data_zip = h5py.File(path, 'r')
+        data_zip = h5py.File(os.path.join(DIR, path), 'r')
         self.imgs = data_zip['images'][()]
         self.latent_values = data_zip['labels'][()]
         self.latent_classes = latent_values
         self.latents_sizes = np.array([10, 10, 10, 8, 4, 15])
 
         image_transforms = [transforms.ToTensor(),
-                            transforms.ConvertImageDtype(torch.float32),
-                            transforms.Lambda(lambda x: x.flatten())]
+                            transforms.ConvertImageDtype(torch.float32)]
 
         if color_mode == 'hsv':
             image_transforms.insert(0, transforms.Lambda(rgb2hsv))
