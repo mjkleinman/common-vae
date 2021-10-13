@@ -45,16 +45,37 @@ commands = []
 device = 'cuda'
 datasets = ['rmnist', 'tmnist']
 epoch = 50
-zs = [8]
-zus = [2]
+zs = [8,16]
+zus = [2,4]
 klu = 10
-klqqs = [0.5, 5, 50]
+klqqs = [0.1, 0.5]
 
 for dataset in datasets:
     for z, zu in zip(zs, zus):
         for klqq in klqqs:
-            command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+            command = f"python main.py cvae_{dataset}_randSample_noAnneal_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
             commands += process_command(command)
+
+#######################################################################################
+# dsprites common
+# #######################################################################################
+
+commands = []
+device = 'cuda'
+datasets = ['ddsprites']
+epoch = 70
+zs = [8,10]
+zus = [3,4]
+klus = [10,25,50]
+klqqs = [0.1,0.5]
+
+for dataset in datasets:
+    for z, zu in zip(zs, zus):
+        for klu in klus:
+            for klqq in klqqs:
+                command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                commands += process_command(command)
+
 
 #######################################################################################
 # CelebA split
