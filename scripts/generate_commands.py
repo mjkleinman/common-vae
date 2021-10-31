@@ -45,8 +45,8 @@ commands = []
 device = 'cuda'
 datasets = ['rmnist', 'tmnist']
 epoch = 50
-zs = [8,16]
-zus = [2,4]
+zs = [8, 16]
+zus = [2, 4]
 klu = 10
 klqqs = [0.1, 0.5]
 
@@ -64,10 +64,30 @@ commands = []
 device = 'cuda'
 datasets = ['ddsprites']
 epoch = 70
-zs = [8,10]
-zus = [3,4]
-klus = [10,25,50]
-klqqs = [0.1,0.5]
+zs = [8, 10]
+zus = [3, 4]
+klus = [10, 25, 50]
+klqqs = [0.1, 0.5]
+
+for dataset in datasets:
+    for z, zu in zip(zs, zus):
+        for klu in klus:
+            for klqq in klqqs:
+                command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                commands += process_command(command)
+
+#######################################################################################
+# debugging dsprites
+# #######################################################################################
+
+commands = []
+device = 'cuda'
+datasets = ['ddsprites2']
+epoch = 70
+zs = [7, 9]
+zus = [2, 3]
+klus = [10]
+klqqs = [0.1]
 
 for dataset in datasets:
     for z, zu in zip(zs, zus):
@@ -87,8 +107,8 @@ for dataset in datasets:
 #klqq = 10
 #klu = 10
 #device = 'cuda'
-#command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
-#commands += process_command(command) 
+# command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+#commands += process_command(command)
 #######################################################################################
 # CelebA paired
 #######################################################################################
@@ -99,11 +119,11 @@ for dataset in datasets:
 #klqq = 10
 #klu = 10
 #device = 'cuda'
-#command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
-#commands += process_command(command) 
+# command = f"python main.py cvae_{dataset}_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq}"
+#commands += process_command(command)
 ##
 #######################################################################################
 # Video data
 #######################################################################################
 
-merge_commands(commands, gpu_cnt=4, put_device_id=True)
+merge_commands(commands, gpu_cnt=1, put_device_id=True)

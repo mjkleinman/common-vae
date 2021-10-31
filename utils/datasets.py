@@ -32,6 +32,7 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "dceleba": "DoubleCelebA",
                  "pceleba": "PairCelebA",
                  "ddsprites": "DoubleDSprites",
+                 "ddsprites2": "DoubleDSpritesPosUnique",
                  "dshapes": "DoubleShapes3D"}
 DATASETS = list(DATASETS_DICT.keys())
 
@@ -302,9 +303,13 @@ class CelebA(DisentangledDataset):
         return img, 0
 
 
-class DoubleDSprites(DSprites):
+class DoubleDSpritesBase(DSprites):
     def __init__(self, **kwargs):
-        super(DoubleDSprites, self).__init__()
+        """
+        isPosUnique: boolean to decide which latents are unq/common. If true, the x,y position belong to the unique components
+        """
+
+        super(DoubleDSpritesBase, self).__init__()
         # self.latents_sizes = self.dataset_zip['latents_sizes']
         self.latents_bases = np.concatenate((self.latents_sizes[::-1].cumprod()[::-1][1:],
                                              np.array([1, ])))
@@ -315,16 +320,21 @@ class DoubleDSprites(DSprites):
 
     # @staticmethod
     def sample_latent(self, size=1):
-        samples = np.zeros((size, self.latents_sizes.size))
-        samples_b = np.zeros((size, self.latents_sizes.size))
+        samples = np.zeros((size, len(self.latents_sizes)))
+        samples_b = np.zeros((size, len(self.latents_sizes)))
 
+        # TODO: Clean up code to make it easier to specify what the common and the unique components are
+        # Here latents_sizes is a 1x5 array, where the last two components correspond to the x and y position
         for lat_i, lat_size in enumerate(self.latents_sizes):
             samples[:, lat_i] = np.random.randint(lat_size, size=size)
             samples_b[:, lat_i] = samples[:, lat_i]
 
-        # get second sample
-        for lat_i, lat_size in enumerate(self.latents_sizes[:3]):
-            samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            # if not isPosUnique and lat_i < 3:  # pos is common
+            if lat_i < 3:
+                samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+            # elif isPosUnique and lat_i >= 3:  # pos is unique
+            #     samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
 
         return samples, samples_b
 
@@ -356,6 +366,38 @@ class DoubleDSprites(DSprites):
 
         lat_value = self.lat_values[idx]
         return (img_cat, sample, sample_b), lat_value
+
+
+# So that naming works with earlier implementations
+# This inherits from the base class
+class DoubleDSprites(DoubleDSpritesBase):
+    def __init__(self, **kwargs):
+        super(DoubleDSprites, self).__init__()
+
+
+# Making the x,y position Unique
+# This inherits from the base class
+class DoubleDSpritesPosUnique(DoubleDSpritesBase):
+    def __init__(self, **kwargs):
+        super(DoubleDSpritesPosUnique, self).__init__()
+
+    # @staticmethod
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, len(self.latents_sizes)))
+        samples_b = np.zeros((size, len(self.latents_sizes)))
+
+        # TODO: Clean up code to make it easier to specify what the common and the unique components are
+        # Here latents_sizes is a 1x5 array, where the last two components correspond to the x and y position
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # resample second sample
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            if lat_i >= 3:  # pos is unique
+                samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+
+        return samples, samples_b
 
 
 class DoubleCelebA(CelebA):
