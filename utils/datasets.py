@@ -33,7 +33,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "pceleba": "PairCelebA",
                  "ddsprites": "DoubleDSprites",
                  "ddsprites2": "DoubleDSpritesPosUnique",
-                 "dshapes": "DoubleShapes3D"}
+                 "dshapes": "DoubleShapes3D",
+                 "dshapes2": "DoubleShapes3DViewUnq"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -721,9 +722,9 @@ class Shapes3D(Dataset):
                                   25.71428571, 30.]}
 
 
-class DoubleShapes3D(Shapes3D):
+class DoubleShapes3DBase(Shapes3D):
     def __init__(self, **kwargs):
-        super(DoubleShapes3D, self).__init__()
+        super(DoubleShapes3DBase, self).__init__()
         # self.latents_sizes = self.dataset_zip['latents_sizes']
         self.latents_bases = np.concatenate((self.latents_sizes[::-1].cumprod()[::-1][1:],
                                              np.array([1, ])))
@@ -775,6 +776,31 @@ class DoubleShapes3D(Shapes3D):
 
         # lat_value = self.lat_values[idx]
         return (img_cat, sample, sample_b), 0
+
+
+class DoubleShapes3D(DoubleShapes3DBase):
+    def __init__(self, **kwargs):
+        super(DoubleShapes3D, self).__init__()
+
+
+class DoubleShapes3DViewUnq(DoubleShapes3DBase):
+    def __init__(self, **kwargs):
+        super(DoubleShapes3DViewUnq, self).__init__()
+
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, self.latents_sizes.size))
+        samples_b = np.zeros((size, self.latents_sizes.size))
+
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # get second sample
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            if lat_i == 5:
+                samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+
+        return samples, samples_b
 
 # HELPERS
 

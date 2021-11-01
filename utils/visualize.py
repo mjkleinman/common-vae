@@ -79,8 +79,9 @@ class Visualizer():
         self.save_images = save_images
         self.model_dir = model_dir
         self.dataset = dataset
+        # TODO: update so this doesn't need to be hardcoded
         self.nchannels = 3 # todo: don't have this hardcoded if possible
-        if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites':
+        if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites' or self.dataset == 'ddsprites2':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
         if loss_of_interest is not None:

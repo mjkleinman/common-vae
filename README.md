@@ -19,5 +19,17 @@
 - Update visualizer to work with both views
 - Include the KL values on the plots.
 
+## Todo's from last meeting
+
+1) Implement the metrics for disentanglement
+2) Thorough literature review on disentanglement
+3) Updated codebase w/ some refactoring
+3.1) Update the visualizations to see both views
+4) Run the experiments that Alessandro suggested [different viewpoints for the shapes, and dsprites with shift] [done -- Run the other]
+5) Implement MINE-like technique for approximating the mutual information
+7) Implement CelebA Paired
+8) Reply to Stefano
+9) TODO: run similar experiments on videos
+
 # Done
 - Added free bits

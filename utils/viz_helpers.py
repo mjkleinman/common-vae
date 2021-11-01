@@ -33,7 +33,8 @@ def get_samples(dataset, num_samples, idcs=[]):
 
     idcs += random.sample(range(len(data_loader.dataset)), num_samples - len(idcs))
     nchannels = 3
-    if dataset == 'tmnist' or dataset == 'rmnist' or dataset == 'ddsprites':
+    # TODO: update so this doesn't need to be hardcoded
+    if dataset == 'tmnist' or dataset == 'rmnist' or dataset == 'ddsprites' or dataset == 'ddsprites2':
         nchannels = 1
     samples = torch.stack([data_loader.dataset[i][0][0][:nchannels, ...] for i in idcs], dim=0)
     samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
