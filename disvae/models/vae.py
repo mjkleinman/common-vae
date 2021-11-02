@@ -66,13 +66,13 @@ class VAE(nn.Module):
             Diagonal log variance of the normal distribution. Shape (batch_size,
             latent_dim)
         """
-        if self.training:
-            std = torch.exp(0.5 * logvar)
-            eps = torch.randn_like(std)
-            return mean + std * eps
-        else:
-            # Reconstruction mode
-            return mean
+        # if self.training:
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return mean + std * eps
+        # else:
+        #     # Reconstruction mode
+        #     return mean
 
     def forward(self, x):
         """
