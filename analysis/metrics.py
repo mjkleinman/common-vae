@@ -113,9 +113,6 @@ class DCIMetrics:
             else:
                 R.append(np.zeros(7))
 
-        print(R)
-        # import pdb
-        # pdb.set_trace()
         return np.stack(R).T
 
     def _disentanglement(self, R_coeff):
@@ -170,11 +167,11 @@ class DCIMetrics:
         else:
             X, y = model_zs
 
-        X = (X - X.mean(axis=0))  # / (X.std(axis=0) + EPS)
+        X = (X - X.mean(axis=0)) #/ (X.std(axis=0) + EPS)
         y = (y - y.mean(axis=0)) / (y.std(axis=0) + EPS)
 
         R_coeff = self._get_regressoR_coeffscores(X, y)
-        print(R_coeff)
+        # print(R_coeff)
 
         # compute metrics
         d_scores, total_d_score = self._disentanglement(R_coeff)
