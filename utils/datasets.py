@@ -775,7 +775,7 @@ class DoubleShapes3DBase(Shapes3D):
         img_cat = torch.cat((sample, sample_b), dim=0)
 
         # lat_value = self.lat_values[idx]
-        return (img_cat, sample, sample_b), 0
+        return (img_cat, sample, sample_b), self.latent_values[idx]
 
 
 class DoubleShapes3D(DoubleShapes3DBase):
@@ -864,8 +864,9 @@ if __name__ == '__main__':
     # # print(dataloader.dataset[97231])
 
     pdb.set_trace()
-    for (_, input1, input2), _ in dataloader:
+    for (_, input1, input2), target in dataloader:
         # print(input1)
+        print(target)
         print(torch.sum(input2))
         import sys
         sys.exit()

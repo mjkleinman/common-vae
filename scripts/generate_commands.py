@@ -109,13 +109,15 @@ zs = [7]
 zus = [1]
 klus = [10]
 klqqs = [0.1]
+batchs = [32, 64]
 
 for dataset in datasets:
     for z, zu in zip(zs, zus):
         for klu in klus:
             for klqq in klqqs:
-                command = f"python main.py DEBUG_cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
-                commands += process_command(command)
+                for batch in batchs:
+                    command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                    commands += process_command(command)
 
 #######################################################################################
 # CelebA split
