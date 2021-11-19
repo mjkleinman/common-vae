@@ -14,7 +14,7 @@ from disvae.utils.math import (log_density_gaussian, log_importance_weight_matri
                                matrix_log_density_gaussian)
 
 
-LOSSES = ["VAE", "betaH", "betaB", "factor", "btcvae", "CVAE"]
+LOSSES = ["VAE", "betaH", "betaB", "factor", "btcvae", "CVAE", "avae"]
 RECON_DIST = ["bernoulli", "laplace", "gaussian"]
 
 
@@ -32,6 +32,10 @@ def get_loss_f(loss_name, **kwargs_parse):
                                 gamma_klu=kwargs_parse['gamma_klu'],
                                 gamma_klc=kwargs_parse['gamma_klc'],
                                 gamma_klqq=kwargs_parse['gamma_klqq'], **kwargs_all)
+    elif loss_name == "avae":
+        return ActionLoss(gamma=kwargs_parse['gamma'],
+                          freeBits=kwargs_parse['free_bits'],
+                          **kwargs_all)
     elif loss_name == "betaB":
         return BetaBLoss(C_init=kwargs_parse["betaB_initC"],
                          C_fin=kwargs_parse["betaB_finC"],
@@ -419,12 +423,40 @@ class CommonLatentLoss(BaseLoss):
 
         # anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
         #              if is_train else 1)
-        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss 
+        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())
             storer['klu_loss'].append(kl_loss_u.item())
             storer['klc_loss'].append(kl_loss_c.item())
+            storer['klqq_loss'].append(klqq_loss.item())
+        return loss
+
+
+class ActionLoss(BaseLoss):
+    def __init__(self, gamma, freeBits=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.gamma = gamma
+        self.freeBits = freeBits
+
+    def __call__(self, data, recon_data, latent_dist, is_train, storer, **kwargs):
+        storer = self._pre_call(is_train, storer)
+
+        rec_loss = _reconstruction_loss(data, recon_data,
+                                        storer=storer,
+                                        distribution=self.rec_dist)
+
+        mu1, logvar1, mu2, logvar2, mu1_post = latent_dist
+        kl_loss_1 = _kl_normal_loss(mu1, logvar1, storer, '_1', freeBits=self.freeBits)
+        kl_loss_2 = _kl_normal_loss(mu2, logvar2, storer, '_2', freeBits=self.freeBits)
+
+        kl_loss = 0.5 * (kl_loss_1 + kl_loss_2)
+        klqq_loss = _kl_div2_loss(mu1_post, logvar1, mu2, logvar2)  # add this in
+
+        loss = rec_loss + 1 * kl_loss + 1 * klqq_loss
+
+        if storer is not None:
+            storer['loss'].append(loss.item())
             storer['klqq_loss'].append(klqq_loss.item())
         return loss
 
@@ -509,7 +541,7 @@ def _kl_normal_loss(mean, logvar, storer=None, latentLabel='', freeBits=None):
     # batch mean of kl for each latent dimension
     latent_kl = 0.5 * (-1 - logvar + mean.pow(2) + logvar.exp()).mean(dim=0)
     if freeBits is not None:
-        latent_kl = torch.maximum(latent_kl, torch.ones_like(latent_kl) * freeBits) 
+        latent_kl = torch.maximum(latent_kl, torch.ones_like(latent_kl) * freeBits)
     total_kl = latent_kl.sum()
 
     if storer is not None:

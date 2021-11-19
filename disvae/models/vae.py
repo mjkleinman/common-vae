@@ -23,7 +23,8 @@ def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, la
 
     encoder = get_encoder(model_type_enc)
     decoder = get_decoder(model_type_dec)
-    model = DoubleVAE(img_size, encoder, decoder, latent_dim, latent_dim_unq)  # changed to Double
+    # model = DoubleVAE(img_size, encoder, decoder, latent_dim, latent_dim_unq)  # changed to Double
+    model = ActionVAE(img_size, encoder, decoder, latent_dim)
     model.model_type_enc = model_type_enc  # store to help reloading
     model.model_type_dec = model_type_dec
     return model
@@ -48,7 +49,7 @@ class VAE(nn.Module):
         self.latent_dim_unq = latent_dim_unq
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
-        self.encoder = encoder(img_size, self.latent_dim, self.latent_dim - 2 * latent_dim_unq)  # e = c + u
+        self.encoder = encoder(img_size, self.latent_dim)  # self.latent_dim - 2 * latent_dim_unq)  # e = c + u
         self.decoder = decoder(img_size, self.latent_dim)  # z = 2u + c, so z = e + u
 
         self.reset_parameters()
@@ -149,3 +150,21 @@ class DoubleVAE(VAE):
         latent_dists = self.encoder(x_a, x_b)
         latent_sample = self.reparameterize_double(*latent_dists)
         return latent_sample
+
+
+class ActionVAE(DoubleVAE):
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=0):
+        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
+
+    def reparameterize_double(self, mean_a, logvar_a, mean_b, logvar_b, mean1_post):
+        sample1 = self.reparameterize(mean_a, logvar_a)
+        sample2 = self.reparameterize(mean_b, logvar_b)
+        # sample = self.reparameterize(mean, logvar)
+
+        return sample1, sample2
+
+    def forward(self, x_a, x_b, action=0.0):
+        latent_dists_double = self.encoder(x_a, x_b, action)
+        latent_sample, latent_sample2 = self.reparameterize_double(*latent_dists_double)
+        reconstruct = self.decoder(latent_sample, latent_sample2)
+        return reconstruct, latent_dists_double, latent_sample

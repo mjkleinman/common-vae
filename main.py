@@ -143,6 +143,11 @@ def parse_arguments(args_to_parse):
                       default=100)
     cvae.add_argument('--gamma-klc', type=float,
                       default=0.1)
+
+    avae = parser.add_argument_group('Action Vae specific parameters')
+    cvae.add_argument('--free-bits', type=float,
+                      default=0.1)
+
     # Learning options
     evaluation = parser.add_argument_group('Evaluation specific options')
     evaluation.add_argument('--is-eval-only', action='store_true',
@@ -225,7 +230,7 @@ def main(args):
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
         model = model.to(device)  # make sure trainer and viz on same device
-        gif_visualizer = GifTraversalsTraining(model, args.dataset, exp_dir)
+        # gif_visualizer = GifTraversalsTraining(model, args.dataset, exp_dir)
         loss_f = get_loss_f(args.loss,
                             n_data=len(train_loader.dataset),
                             **vars(args))
@@ -233,8 +238,8 @@ def main(args):
                           device=device,
                           logger=logger,
                           save_dir=exp_dir,
-                          is_progress_bar=not args.no_progress_bar,
-                          gif_visualizer=gif_visualizer)
+                          is_progress_bar=not args.no_progress_bar,)
+                          #gif_visualizer=gif_visualizer)
         trainer(train_loader,
                 epochs=args.epochs,
                 checkpoint_every=args.checkpoint_every,)

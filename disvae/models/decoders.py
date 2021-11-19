@@ -9,8 +9,9 @@ from torch import nn
 
 # ALL decoders should be called Decoder<Model>
 def get_decoder(model_type):
-    model_type = model_type.lower().capitalize()
-    # model_type = "Burgess"
+    # model_type = model_type.lower().capitalize()
+    if model_type is not "Burgess":
+        model_type = "Action"
     return eval("Decoder{}".format(model_type))
 
 
@@ -94,5 +95,17 @@ class DecoderDoubleburgess(nn.Module):
     def forward(self, z):
         x_a = self.decoder1(z)
         x_b = self.decoder2(z)
+        x = torch.cat((x_a, x_b), dim=1)
+        return x
+
+
+class DecoderAction(nn.Module):
+    def __init__(self, img_size, latent_dim):
+        super(DecoderAction, self).__init__()
+        self.decoder = get_decoder("Burgess")(img_size, latent_dim)
+
+    def forward(self, z1, z2):
+        x_a = self.decoder(z1)
+        x_b = self.decoder(z2)
         x = torch.cat((x_a, x_b), dim=1)
         return x

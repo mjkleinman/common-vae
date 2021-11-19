@@ -80,8 +80,8 @@ class Visualizer():
         self.model_dir = model_dir
         self.dataset = dataset
         # TODO: update so this doesn't need to be hardcoded
-        self.nchannels = 3 # todo: don't have this hardcoded if possible
-        if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites' or self.dataset == 'ddsprites2':
+        self.nchannels = 3  # todo: don't have this hardcoded if possible
+        if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites' or self.dataset == 'ddsprites2' or self.dataset == 'ddspritesd':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
         if loss_of_interest is not None:
@@ -128,10 +128,12 @@ class Visualizer():
                 raise ValueError("Every value should be sampled from the same posterior, but {} datapoints given.".format(data.size(0)))
 
             with torch.no_grad():
-                pmu1, plu1, pmc1, plc1, pmu2, plu2, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
+                # pmu1, plu1, pmc1, plc1, pmu2, plu2, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
                 # just sampling from the posterior of the common input x_a for now
-                post_mean = torch.cat((pmu1, pmc1, pmu2), dim=-1)
-                post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
+                # post_mean = torch.cat((pmu1, pmc1, pmu2), dim=-1)
+                # post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
+
+                post_mean, post_logvar, _, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
                 samples = self.model.reparameterize(post_mean, post_logvar)
                 samples = samples.cpu().repeat(n_samples, 1)
                 post_mean_idx = post_mean.cpu()[0, idx]
@@ -172,7 +174,7 @@ class Visualizer():
             of latent distribution.
         """
         latent_samples = latent_samples.to(self.device)
-        return self.model.decoder(latent_samples)[:, :self.nchannels, ...].cpu()  # for the multiview, output has 6 channels. TODO: Clean this up
+        return self.model.decoder(latent_samples, latent_samples)[:, :self.nchannels, ...].cpu()  # for the multiview, output has 6 channels. TODO: Clean this up
 
     def generate_samples(self, size=(8, 8)):
         """Plot generated samples from the prior and decoding.

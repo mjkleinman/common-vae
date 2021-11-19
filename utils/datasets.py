@@ -33,6 +33,7 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "pceleba": "PairCelebA",
                  "ddsprites": "DoubleDSprites",
                  "ddsprites2": "DoubleDSpritesPosUnique",
+                 "ddspritesd": "DoubleDSpritesDisentangled",
                  "dshapes": "DoubleShapes3D",
                  "dshapes2": "DoubleShapes3DViewUnq"}
 DATASETS = list(DATASETS_DICT.keys())
@@ -187,15 +188,15 @@ class DSprites(DisentangledDataset):
                                            4.51100484, 4.67211215, 4.83321947, 4.99432678,
                                            5.1554341, 5.31654141, 5.47764873, 5.63875604,
                                            5.79986336, 5.96097068, 6.12207799, 6.28318531]),
-                  'shape': np.array([1., 2., 3.]),
-                  'color': np.array([1.])}
+                  'shape': np.array([1., 2., 3.])}
+                  #,'color': np.array([1.])}
 
     def __init__(self, root=os.path.join(DIR, '../data/dsprites/'), **kwargs):
         super().__init__(root, [transforms.ToTensor()], **kwargs)
 
         dataset_zip = np.load(self.train_data)
         self.imgs = dataset_zip['imgs']
-        self.lat_values = dataset_zip['latents_values']
+        self.lat_values = dataset_zip['latents_values'][:, 1:] #first is color which is white
         self.latents_sizes = np.array([3, 6, 40, 32, 32])
 
     def download(self):
@@ -365,8 +366,10 @@ class DoubleDSpritesBase(DSprites):
         sample, sample_b = self.transforms(sample), self.transforms(sample_b)
         img_cat = torch.cat((sample, sample_b), dim=0)
 
+
         lat_value = self.lat_values[idx]
-        return (img_cat, sample, sample_b), lat_value
+        lat_value_b = self.lat_values[idx_b]
+        return (img_cat, sample, sample_b), (lat_value, lat_value_b)
 
 
 # So that naming works with earlier implementations
@@ -397,6 +400,34 @@ class DoubleDSpritesPosUnique(DoubleDSpritesBase):
         for lat_i, lat_size in enumerate(self.latents_sizes):
             if lat_i >= 3:  # pos is unique
                 samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
+
+        return samples, samples_b
+
+
+# Making the x,y position Unique
+# This inherits from the base class
+class DoubleDSpritesDisentangled(DoubleDSpritesBase):
+    def __init__(self, **kwargs):
+        super(DoubleDSpritesDisentangled, self).__init__()
+
+    # @staticmethod
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, len(self.latents_sizes)))
+        samples_b = np.zeros((size, len(self.latents_sizes)))
+
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # resample second sample
+        lat_index = np.random.randint(self.latents_sizes, size=1)
+        lat_size = self.latents_sizes[lat_index]
+        samples_b[:, lat_index] = np.random.randint(lat_size, size=size)
+
+        # for lat_i, lat_size in enumerate(self.latents_sizes):
+        # if lat_i >= 4:  # pos is unique, make more general
+        # CHANGE only one at a time
+        # index = np.random.randint(self.latents_sizes, size=1)
 
         return samples, samples_b
 
@@ -850,7 +881,7 @@ if __name__ == '__main__':
 
     dataPath = ""
     # dataset = DoubleRotateMNIST()
-    dataset = DoubleShapes3D()
+    dataset = DoubleDSpritesDisentangled()
     # Dataset = DoubleCeleb  # CelebA
     # logger = logging.getLogger(__name__)
     # dataset = Dataset(logger=logger)

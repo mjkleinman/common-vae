@@ -125,8 +125,9 @@ class Trainer():
         kwargs = dict(desc="Epoch {}".format(epoch + 1), leave=False,
                       disable=not self.is_progress_bar)
         with trange(len(data_loader), **kwargs) as t:
-            for _, (data, _) in enumerate(data_loader):
-                iter_loss = self._train_iteration_double(data, storer)  # changed to double MK
+            for _, (data, target) in enumerate(data_loader):
+                action = target[0] - target[1]
+                iter_loss = self._train_iteration_action(data, action, storer)  # changed to double MK
                 epoch_loss += iter_loss
 
                 t.set_postfix(loss=iter_loss)
@@ -183,6 +184,38 @@ class Trainer():
         data_b = data_b.to(self.device)
         try:
             recon_batch, latent_dist, latent_sample = self.model(data_a, data_b)
+            loss = self.loss_f(data_full, recon_batch, latent_dist, self.model.training,
+                               storer, latent_sample=latent_sample)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        except ValueError:
+            # for losses that use multiple optimizers (e.g. Factor)
+            loss = self.loss_f.call_optimize(data, self.model, self.optimizer, storer)
+
+        return loss.item()
+
+    def _train_iteration_action(self, data, action, storer):
+        """
+        Trains the model for one iteration on a batch of data.
+
+        Parameters
+        ----------
+        data: torch.Tensor
+            A batch of data. Shape : (batch_size, channel, height, width).
+
+        storer: dict
+            Dictionary in which to store important variables for vizualisation.
+        """
+        data_full, data_a, data_b = data
+        batch_size, channel, height, width = data_full.size()
+        data_full = data_full.to(self.device)
+        data_a = data_a.to(self.device)
+        data_b = data_b.to(self.device)
+        action = action.to(self.device)
+        try:
+            recon_batch, latent_dist, latent_sample = self.model(data_a, data_b, action)
             loss = self.loss_f(data_full, recon_batch, latent_dist, self.model.training,
                                storer, latent_sample=latent_sample)
             self.optimizer.zero_grad()

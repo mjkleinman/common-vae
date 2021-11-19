@@ -50,7 +50,7 @@ def process_command(command):
 #klu = 10
 #klqqs = [0.1, 0.5]
 #
-#for dataset in datasets:
+# for dataset in datasets:
 #    for z, zu in zip(zs, zus):
 #        for klqq in klqqs:
 #            command = f"python main.py cvae_{dataset}_randSample_noAnneal_klqq={klqq}_epoch={epoch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
@@ -69,7 +69,7 @@ def process_command(command):
 #klus = [10, 25, 50]
 #klqqs = [0.1, 0.5]
 #
-#for dataset in datasets:
+# for dataset in datasets:
 #    for z, zu in zip(zs, zus):
 #        for klu in klus:
 #            for klqq in klqqs:
@@ -89,7 +89,7 @@ def process_command(command):
 #klus = [10]
 #klqqs = [0.1]
 #
-#for dataset in datasets:
+# for dataset in datasets:
 #    for z, zu in zip(zs, zus):
 #        for klu in klus:
 #            for klqq in klqqs:
@@ -111,7 +111,7 @@ def process_command(command):
 #klqqs = [0.1]
 #batchs = [32, 64]
 #
-#for dataset in datasets:
+# for dataset in datasets:
 #    for z, zu in zip(zs, zus):
 #        for klu in klus:
 #            for klqq in klqqs:
@@ -135,10 +135,10 @@ def process_command(command):
 # CelebA paired
 #######################################################################################
 commands = []
-epoch = 50 # 100
+epoch = 50  # 100
 dataset = 'pceleba'
-zs = [32,64] #, 64]
-zus = [8, 16] #, 16]
+zs = [32, 64]  # , 64]
+zus = [8, 16]  # , 16]
 klqqs = [0.1, 1]
 klu = 10
 device = 'cuda'
@@ -149,6 +149,24 @@ for z, zu in zip(zs, zus):
         for batch in batchs:
             command = f"python main.py cvae_{dataset}_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} -b {batch}"
             commands += process_command(command)
+
+
+#######################################################################################
+# Action
+#######################################################################################
+epoch = 50  # 100
+dataset = 'ddspritesd'
+z = 5  # , 64]
+device = 'cuda'
+batch = 64
+free_bits = [0.25, 0.5]
+lrs = [0.001] #, 0.0005]
+
+for fb in free_bits:
+    for lr in lrs:
+        command = f"python main.py avae_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch} -d ddspritesd -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test"
+        commands += process_command(command)
+
 #
 #######################################################################################
 # Video data

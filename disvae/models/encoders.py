@@ -5,11 +5,16 @@ import numpy as np
 
 import torch
 from torch import nn
-
+import pdb
+from torch.nn.parameter import Parameter
 
 # ALL encoders should be called Enccoder<Model>
+
+
 def get_encoder(model_type):
-    model_type = model_type.lower().capitalize()
+    # model_type = model_type.lower().capitalize()
+    if model_type is not "Burgess":
+        model_type = "Action"  # hack for now
     return eval("Encoder{}".format(model_type))
 
 
@@ -108,6 +113,29 @@ class EncoderDoubleburgess(nn.Module):
         logvar_u1, logvar_c1 = logvar1[:, :self.latent_dim_unique], logvar1[:, self.latent_dim_unique:]
 
         return mu_u1, logvar_u1, mu_c1, logvar_c1, mu_u2, logvar_u2, mu_c2, logvar_c2
+
+
+class EncoderAction(nn.Module):
+    def __init__(self, img_size, latent_dim):
+        super().__init__()
+        # self.latent_dim_common = latent_dim_common
+        # self.latent_dim_unique = (latent_dim - self.latent_dim_common) // 2  # ASSERT THIS IS AN INTEGER FOR THIS TO WORK
+        # self.latent_dim_encoder = self.latent_dim_unique + self.latent_dim_common
+        self.encoder = get_encoder("Burgess")(img_size, latent_dim)
+        self.lin1 = Parameter(torch.ones(latent_dim,))  # nn.Linear(latent_dim_common, latent_dim_common, bias=False)
+        # self.encoder2 = get_encoder('Burgess')(img_size, self.latent_dim_encoder)
+
+    def forward(self, x_a, x_b, action=0.0):
+        # action should be a one-hot encoding
+
+        mu1, logvar1 = self.encoder(x_a)
+        if self.training:
+            mu1_post = mu1 + self.lin1 * action.float()  # torch.diag_embed make diagonal  # diagonal weight update, test this
+        else:
+            mu1_post = mu1
+        mu2, logvar2 = self.encoder(x_b)
+        # print(self.lin1)
+        return mu1, logvar1, mu2, logvar2, mu1_post
 
 # if __name__ == '__main__':
 #     encoder = get_encoder('DoubleBurgess')
