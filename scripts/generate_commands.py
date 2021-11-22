@@ -156,16 +156,17 @@ for z, zu in zip(zs, zus):
 #######################################################################################
 epoch = 50  # 100
 dataset = 'ddspritesd'
-z = 5  # , 64]
+zs = 5, 16  # 5  # , 64]
 device = 'cuda'
 batch = 64
-free_bits = [0.25, 0.5]
-lrs = [0.001] #, 0.0005]
+free_bits = [0.1]
+lrs = [0.0005]  # , 0.0005]
 
 for fb in free_bits:
     for lr in lrs:
-        command = f"python main.py avae_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch} -d ddspritesd -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test"
-        commands += process_command(command)
+        for z in zs:
+            command = f"python main.py avae_new_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch} -d ddspritesd -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test"
+            commands += process_command(command)
 
 #
 #######################################################################################

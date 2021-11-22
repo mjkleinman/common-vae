@@ -197,6 +197,7 @@ class DSprites(DisentangledDataset):
         dataset_zip = np.load(self.train_data)
         self.imgs = dataset_zip['imgs']
         self.lat_values = dataset_zip['latents_values'][:, 1:] #first is color which is white
+        # pdb.set_trace()
         self.latents_sizes = np.array([3, 6, 40, 32, 32])
 
     def download(self):
@@ -420,7 +421,7 @@ class DoubleDSpritesDisentangled(DoubleDSpritesBase):
             samples_b[:, lat_i] = samples[:, lat_i]
 
         # resample second sample
-        lat_index = np.random.randint(self.latents_sizes, size=1)
+        lat_index = np.random.randint(low=1, high=len(self.latents_sizes), size=1) #ignore shape for action
         lat_size = self.latents_sizes[lat_index]
         samples_b[:, lat_index] = np.random.randint(lat_size, size=size)
 
