@@ -25,7 +25,7 @@ def merge_commands(commands, gpu_cnt=10, max_job_cnt=10000, shuffle=True, put_de
 
 def check_exists(logdir):
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.exists(os.path.join(root_dir, '../', logdir, 'test_losses.log'))
+    return os.path.exists(os.path.join(root_dir, '../', logdir, 'train_losses.log'))
 
 
 def process_command(command):
@@ -154,19 +154,25 @@ for z, zu in zip(zs, zus):
 #######################################################################################
 # Action
 #######################################################################################
-epoch = 50  # 100
-dataset = 'ddspritesd'
-zs = 5, 16  # 5  # , 64]
+epoch = 30  # 100
+datasets = ['ddspritesd', 'dshapesd']
+zs = [10]  # 5  # , 64]
 device = 'cuda'
 batch = 64
-free_bits = [0.1]
-lrs = [0.0005]  # , 0.0005]
+free_bits = [0]
+lrs = [0.0001]  # , 0.0005]
+seeds = [0]
+klqq = 0.01
+betas = [2, 4, 16]
 
-for fb in free_bits:
-    for lr in lrs:
-        for z in zs:
-            command = f"python main.py avae_new_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch} -d ddspritesd -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test"
-            commands += process_command(command)
+for seed in seeds:
+    for fb in free_bits:
+        for lr in lrs:
+            for z in zs:
+                for beta in betas:
+                    for dataset in datasets:
+                        command = f"python main.py avae_actpost_beta={beta}_klqq={klqq}_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch}_seed={seed} -d {dataset} -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test -s {seed} --gamma-klqq {klqq} --avae-beta {beta}"
+                        commands += process_command(command)
 
 #
 #######################################################################################

@@ -35,7 +35,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "ddsprites2": "DoubleDSpritesPosUnique",
                  "ddspritesd": "DoubleDSpritesDisentangled",
                  "dshapes": "DoubleShapes3D",
-                 "dshapes2": "DoubleShapes3DViewUnq"}
+                 "dshapes2": "DoubleShapes3DViewUnq",
+                 "dshapesd": "DoubleShapesDisentangled",}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -807,7 +808,7 @@ class DoubleShapes3DBase(Shapes3D):
         img_cat = torch.cat((sample, sample_b), dim=0)
 
         # lat_value = self.lat_values[idx]
-        return (img_cat, sample, sample_b), self.latent_values[idx]
+        return (img_cat, sample, sample_b), (self.latent_values[idx], self.latent_values[idx_b])
 
 
 class DoubleShapes3D(DoubleShapes3DBase):
@@ -833,6 +834,26 @@ class DoubleShapes3DViewUnq(DoubleShapes3DBase):
                 samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
 
         return samples, samples_b
+
+class DoubleShapesDisentangled(DoubleShapes3DBase):
+    def __init__(self, **kwargs):
+        super(DoubleShapesDisentangled, self).__init__()
+
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, len(self.latents_sizes)))
+        samples_b = np.zeros((size, len(self.latents_sizes)))
+
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # resample second sample
+        lat_index = np.random.randint(low=0, high=len(self.latents_sizes), size=1) #ignore shape for action
+        lat_size = self.latents_sizes[lat_index]
+        samples_b[:, lat_index] = np.random.randint(lat_size, size=size)
+
+        return samples, samples_b
+
 
 # HELPERS
 
@@ -882,7 +903,7 @@ if __name__ == '__main__':
 
     dataPath = ""
     # dataset = DoubleRotateMNIST()
-    dataset = DoubleDSpritesDisentangled()
+    dataset = DoubleShapesDisentangled()
     # Dataset = DoubleCeleb  # CelebA
     # logger = logging.getLogger(__name__)
     # dataset = Dataset(logger=logger)

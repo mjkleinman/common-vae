@@ -116,14 +116,16 @@ class EncoderDoubleburgess(nn.Module):
 
 
 class EncoderAction(nn.Module):
-    def __init__(self, img_size, latent_dim):
+    def __init__(self, img_size, latent_dim, action_dim):
         super().__init__()
         # self.latent_dim_common = latent_dim_common
         # self.latent_dim_unique = (latent_dim - self.latent_dim_common) // 2  # ASSERT THIS IS AN INTEGER FOR THIS TO WORK
         # self.latent_dim_encoder = self.latent_dim_unique + self.latent_dim_common
         self.encoder = get_encoder("Burgess")(img_size, latent_dim)
-        #self.lin1 = Parameter(torch.ones(latent_dim,))  # nn.Linear(latent_dim_common, latent_dim_common, bias=False)
-        self.lin1 = nn.Linear(5, latent_dim, bias=False)
+        # self.lin1 = Parameter(torch.ones(latent_dim,))  # nn.Linear(latent_dim_common, latent_dim_common, bias=False)
+        self.lin1 = nn.Linear(action_dim, latent_dim, bias=False)
+        self.lin2 = nn.Linear(action_dim, latent_dim, bias=False)
+
         # self.encoder2 = get_encoder('Burgess')(img_size, self.latent_dim_encoder)
 
     def forward(self, x_a, x_b, action=0.0):
@@ -131,12 +133,14 @@ class EncoderAction(nn.Module):
 
         mu1, logvar1 = self.encoder(x_a)
         if self.training:
-            mu1_post = mu1 + self.lin1(action.float())  # torch.diag_embed make diagonal  # diagonal weight update, test this
+            mu1_post = mu1 + self.lin1(action.float())  # torch.diag_embed make diagonal  # diagonal weight
+            logvar1_post = logvar1 + self.lin2(action.float())
         else:
             mu1_post = mu1
+            logvar1_post = logvar1
         mu2, logvar2 = self.encoder(x_b)
         # print(self.lin1)
-        return mu1, logvar1, mu2, logvar2, mu1_post
+        return mu1, logvar1, mu2, logvar2, mu1_post, logvar1_post
 
 # if __name__ == '__main__':
 #     encoder = get_encoder('DoubleBurgess')

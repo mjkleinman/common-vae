@@ -13,7 +13,7 @@ import random
 MODELS = ["Burgess", "Doubleburgess"]
 
 
-def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, latent_dim_unq):
+def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, latent_dim_unq, action_dim):
     """Return an instance of a VAE with encoder and decoder from `model_type`."""
     model_type_enc = model_type_enc.lower().capitalize()
     model_type_dec = model_type_dec.lower().capitalize()
@@ -24,14 +24,14 @@ def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, la
     encoder = get_encoder(model_type_enc)
     decoder = get_decoder(model_type_dec)
     # model = DoubleVAE(img_size, encoder, decoder, latent_dim, latent_dim_unq)  # changed to Double
-    model = ActionVAE(img_size, encoder, decoder, latent_dim)
+    model = ActionVAE(img_size, encoder, decoder, latent_dim, latent_dim_unq, action_dim)
     model.model_type_enc = model_type_enc  # store to help reloading
     model.model_type_dec = model_type_dec
     return model
 
 
 class VAE(nn.Module):
-    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq):
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq, action_dim):
         """
         Class which defines model and forward pass.
 
@@ -49,7 +49,7 @@ class VAE(nn.Module):
         self.latent_dim_unq = latent_dim_unq
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
-        self.encoder = encoder(img_size, self.latent_dim)  # self.latent_dim - 2 * latent_dim_unq)  # e = c + u
+        self.encoder = encoder(img_size, self.latent_dim, action_dim)  # self.latent_dim - 2 * latent_dim_unq)  # e = c + u
         self.decoder = decoder(img_size, self.latent_dim)  # z = 2u + c, so z = e + u
 
         self.reset_parameters()
@@ -107,8 +107,8 @@ class VAE(nn.Module):
 
 
 class DoubleVAE(VAE):
-    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq):
-        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq, action_dim):
+        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq, action_dim)
 
     def reparameterize_double(self, mean_u1, logvar_u1, mean_c1, logvar_c1, mean_u2, logvar_u2, mean_c2, logvar_c2):
 
@@ -153,12 +153,14 @@ class DoubleVAE(VAE):
 
 
 class ActionVAE(DoubleVAE):
-    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=0):
-        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq)
+    def __init__(self, img_size, encoder, decoder, latent_dim, latent_dim_unq=0, action_dim=5):
+        super().__init__(img_size, encoder, decoder, latent_dim, latent_dim_unq, action_dim)
 
-    def reparameterize_double(self, mean_a, logvar_a, mean_b, logvar_b, mean1_post):
+    def reparameterize_double(self, mean_a, logvar_a, mean_b, logvar_b, mean1_post, logvar1_post):
         sample1 = self.reparameterize(mean_a, logvar_a)
-        sample2 = self.reparameterize(mean_b, logvar_b)
+        mean_avg = 0.0 * mean_b + 1 * mean1_post  # TODO play around with how/whether to average
+        logvar_avg = 0.0 * logvar_b + 1 * logvar1_post
+        sample2 = self.reparameterize(mean_avg, logvar_avg)
         # sample = self.reparameterize(mean, logvar)
 
         return sample1, sample2

@@ -33,7 +33,8 @@ def get_loss_f(loss_name, **kwargs_parse):
                                 gamma_klc=kwargs_parse['gamma_klc'],
                                 gamma_klqq=kwargs_parse['gamma_klqq'], **kwargs_all)
     elif loss_name == "avae":
-        return ActionLoss(gamma=kwargs_parse['gamma'],
+        return ActionLoss(beta=kwargs_parse['avae_beta'],
+                          gamma_klqq=kwargs_parse['gamma_klqq'],
                           freeBits=kwargs_parse['free_bits'],
                           **kwargs_all)
     elif loss_name == "betaB":
@@ -434,9 +435,10 @@ class CommonLatentLoss(BaseLoss):
 
 
 class ActionLoss(BaseLoss):
-    def __init__(self, gamma, freeBits=0.1, **kwargs):
+    def __init__(self, beta, gamma_klqq, freeBits=0.1, **kwargs):
         super().__init__(**kwargs)
-        self.gamma = gamma
+        self.beta = beta
+        self.gamma_klqq = gamma_klqq
         self.freeBits = freeBits
 
     def __call__(self, data, recon_data, latent_dist, is_train, storer, **kwargs):
@@ -446,18 +448,19 @@ class ActionLoss(BaseLoss):
                                         storer=storer,
                                         distribution=self.rec_dist)
 
-        mu1, logvar1, mu2, logvar2, mu1_post = latent_dist
+        mu1, logvar1, mu2, logvar2, mu1_post, logvar1_post = latent_dist
         kl_loss_1 = _kl_normal_loss(mu1, logvar1, storer, '_1', freeBits=self.freeBits)
-        kl_loss_2 = _kl_normal_loss(mu2, logvar2, storer, '_2', freeBits=self.freeBits)
+        kl_loss_2 = _kl_normal_loss(mu1_post, logvar1_post, storer, '_2', freeBits=self.freeBits)
 
         kl_loss = 0.5 * (kl_loss_1 + kl_loss_2)
-        klqq_loss = _kl_div2_loss(mu1_post, logvar1, mu2, logvar2)  # add this in
+        klqq_loss = _kl_div2_loss(mu1_post, logvar1_post, mu2, logvar2)  # add this in
 
-        loss = rec_loss + 1 * kl_loss + 1 * klqq_loss
+        loss = rec_loss + self.beta * kl_loss + self.gamma_klqq * klqq_loss  # changed to zero
 
         if storer is not None:
             storer['loss'].append(loss.item())
             storer['klqq_loss'].append(klqq_loss.item())
+            storer['kl_loss'].append(kl_loss.item())
         return loss
 
 

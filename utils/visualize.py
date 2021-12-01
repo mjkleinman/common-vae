@@ -133,7 +133,7 @@ class Visualizer():
                 # post_mean = torch.cat((pmu1, pmc1, pmu2), dim=-1)
                 # post_logvar = torch.cat((plu2, plc1, plu2), dim=-1)
 
-                post_mean, post_logvar, _, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
+                post_mean, post_logvar, _, _, _, _ = self.model.encoder(data_a.to(self.device), data_b.to(self.device))
                 samples = self.model.reparameterize(post_mean, post_logvar)
                 samples = samples.cpu().repeat(n_samples, 1)
                 post_mean_idx = post_mean.cpu()[0, idx]

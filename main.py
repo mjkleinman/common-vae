@@ -145,6 +145,12 @@ def parse_arguments(args_to_parse):
                       default=0.1)
 
     avae = parser.add_argument_group('Action Vae specific parameters')
+    avae.add_argument('--avae-beta', type=float,
+                        default=1.0,
+                        help="Weight of on kl.")
+    avae.add_argument('--action-dim', type=int,
+                        default=6,
+                        help="Weight of on kl.")
     cvae.add_argument('--free-bits', type=float,
                       default=0.1)
 
@@ -223,7 +229,7 @@ def main(args):
 
         # PREPARES MODEL
         args.img_size = get_img_size(args.dataset)  # stores for metadata
-        model = init_specific_model(args.model_type_enc, args.model_type_dec, args.img_size, args.latent_dim, args.latent_dim_unq)
+        model = init_specific_model(args.model_type_enc, args.model_type_dec, args.img_size, args.latent_dim, args.latent_dim_unq, args.action_dim)
         logger.info('Num parameters in model: {}'.format(get_n_param(model)))
 
         # TRAINS
