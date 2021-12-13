@@ -155,15 +155,15 @@ for z, zu in zip(zs, zus):
 # Action
 #######################################################################################
 epoch = 30  # 100
-datasets = ['ddspritesd', 'dshapesd']
+datasets = ['dshapesd']  # ['ddspritesd',
 zs = [10]  # 5  # , 64]
 device = 'cuda'
-batch = 64
+batchs = [32,64]
 free_bits = [0]
 lrs = [0.0001]  # , 0.0005]
 seeds = [0]
-klqq = 0.01
-betas = [2, 4, 16]
+klqq = 0.0
+betas = [2, 8, 16]
 
 for seed in seeds:
     for fb in free_bits:
@@ -171,8 +171,9 @@ for seed in seeds:
             for z in zs:
                 for beta in betas:
                     for dataset in datasets:
-                        command = f"python main.py avae_actpost_beta={beta}_klqq={klqq}_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch}_seed={seed} -d {dataset} -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test -s {seed} --gamma-klqq {klqq} --avae-beta {beta}"
-                        commands += process_command(command)
+                        for batch in batchs:
+                            command = f"python main.py avae_actpost_beta={beta}_klqq={klqq}_{dataset}_fb={fb}_epoch={epoch}_z={z}_lr={lr}_batch={batch}_seed={seed} -d {dataset} -m Burgess -md Burgess -l avae --free-bits {fb} --lr {lr} -b {batch} -e {epoch} -z {z} -zu 0 --no-test -s {seed} --gamma-klqq {klqq} --avae-beta {beta}"
+                            commands += process_command(command)
 
 #
 #######################################################################################

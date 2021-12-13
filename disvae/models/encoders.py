@@ -125,6 +125,9 @@ class EncoderAction(nn.Module):
         # self.lin1 = Parameter(torch.ones(latent_dim,))  # nn.Linear(latent_dim_common, latent_dim_common, bias=False)
         self.lin1 = nn.Linear(action_dim, latent_dim, bias=False)
         self.lin2 = nn.Linear(action_dim, latent_dim, bias=False)
+        # Note that the dimensions are swapped
+        self.lin1.weight.data = torch.full((latent_dim, action_dim), 0.0)
+        self.lin2.weight.data = torch.full((latent_dim, action_dim), 0.0)
 
         # self.encoder2 = get_encoder('Burgess')(img_size, self.latent_dim_encoder)
 
@@ -134,7 +137,7 @@ class EncoderAction(nn.Module):
         mu1, logvar1 = self.encoder(x_a)
         if self.training:
             mu1_post = mu1 + self.lin1(action.float())  # torch.diag_embed make diagonal  # diagonal weight
-            logvar1_post = logvar1 + self.lin2(action.float())
+            logvar1_post = logvar1 #+ self.lin2(action.float())
         else:
             mu1_post = mu1
             logvar1_post = logvar1

@@ -43,6 +43,36 @@ def get_samples(dataset, num_samples, idcs=[]):
 
     return samples, samples_a, samples_b
 
+def get_samples_and_targets(dataset, num_samples, idcs=[]):
+    """ Generate a number of samples from the dataset.
+
+    Parameters
+    ----------
+    dataset : str
+        The name of the dataset.
+
+    num_samples : int, optional
+        The number of samples to load from the dataset
+
+    idcs : list of ints, optional
+        List of indices to of images to put at the begning of the samples.
+    """
+    data_loader = get_dataloaders(dataset,
+                                  batch_size=1,
+                                  shuffle=idcs is None)
+
+    idcs += random.sample(range(len(data_loader.dataset)), num_samples - len(idcs))
+    nchannels = 3
+    # TODO: update so this doesn't need to be hardcoded
+    if dataset == 'tmnist' or dataset == 'rmnist' or dataset == 'ddsprites' or dataset == 'ddsprites2' or dataset == 'ddspritesd':
+        nchannels = 1
+    samples = torch.stack([data_loader.dataset[i][0][0][:nchannels, ...] for i in idcs], dim=0)
+    samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
+    samples_b = torch.stack([data_loader.dataset[i][0][2] for i in idcs], dim=0)
+    targets = torch.stack([data_loader.dataset[i][1][0] for i in idcs], dim=0)
+    print("Selected idcs: {}".format(idcs))
+
+    return samples, samples_a, samples_b, targets
 
 def sort_list_by_other(to_sort, other, reverse=True):
     """Sort a list by an other."""

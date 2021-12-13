@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib import collections
 from matplotlib import transforms
 from matplotlib import ticker
+import os
 
 __all__ = ['hinton']
 
@@ -36,7 +37,7 @@ class SquareCollection(collections.RegularPolyCollection):
 
 
 def hinton(inarray, x_label=None, y_label=None, max_value=None,
-           use_default_ticks=True, ax=None, fontsize=14):
+           use_default_ticks=True, ax=None, fontsize=14, save_plot=None, figs_dir=None):
     """Plot Hinton diagram for visualizing the values of a 2D array.
     Plot representation of an array with positive and negative values
     represented by white and black squares, respectively. The size of each
@@ -99,6 +100,11 @@ def hinton(inarray, x_label=None, y_label=None, max_value=None,
         ax.xaxis.set_major_locator(IndexLocator())
         ax.yaxis.set_major_locator(IndexLocator())
 
+    if save_plot:
+        plt.tight_layout()
+        plt.savefig(os.path.join(figs_dir, "hinton.pdf"), format='pdf', dpi=None, bbox_inches='tight')
+    else:
+        plt.show()
 
 class IndexLocator(ticker.Locator):
     def __init__(self, max_ticks=10):
