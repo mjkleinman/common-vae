@@ -366,7 +366,9 @@ class DoubleDSpritesBase(DSprites):
         img_cat = torch.cat((sample, sample_b), dim=0)
 
         lat_value = self.lat_values[idx]
-        return (img_cat, sample, sample_b), lat_value
+        # print(latent_idx)
+        # latent_idx = latent_idx.view(-1)
+        return (img_cat, sample, sample_b), latent_idx.astype(int).reshape(-1)  # lat_value
 
 
 # So that naming works with earlier implementations
@@ -610,49 +612,6 @@ class FashionMNIST(datasets.FashionMNIST):
                          ]))
 
 
-# https://github.com/avivga/lord-pytorch/blob/main/dataset.py
-# class Shapes3D(DisentangledDataset):
-
-#     def __init__(self, base_dir):
-#         super().__init__(base_dir)
-
-#         self.__data_path = os.path.join(base_dir, '3dshapes.h5')
-
-#     def __img_index(self, floor_hue, wall_hue, object_hue, scale, shape, orientation):
-#         return (
-#             floor_hue * 10 * 10 * 8 * 4 * 15
-#             + wall_hue * 10 * 8 * 4 * 15
-#             + object_hue * 8 * 4 * 15
-#             + scale * 4 * 15
-#             + shape * 15
-#             + orientation
-#         )
-
-#     def read_images(self):
-#         with h5py.File(self.__data_path, 'r') as data:
-#             imgs = data['images'][:]
-#             classes = np.empty(shape=(imgs.shape[0],), dtype=np.uint32)
-#             content_ids = dict()
-
-#             for floor_hue in range(10):
-#                 for wall_hue in range(10):
-#                     for object_hue in range(10):
-#                         for scale in range(8):
-#                             for shape in range(4):
-#                                 for orientation in range(15):
-#                                     img_idx = self.__img_index(floor_hue, wall_hue, object_hue, scale, shape, orientation)
-#                                     content_id = '_'.join((str(floor_hue), str(wall_hue), str(object_hue), str(scale), str(orientation)))
-
-#                                     classes[img_idx] = shape
-#                                     content_ids[img_idx] = content_id
-
-#             unique_content_ids = list(set(content_ids.values()))
-#             contents = np.empty(shape=(imgs.shape[0],), dtype=np.uint32)
-#             for img_idx, content_id in content_ids.items():
-#                 contents[img_idx] = unique_content_ids.index(content_id)
-
-#             return imgs, classes, contents
-
 # taken from: https://github.com/mmrl/disent-and-gen/blob/master/src/dataset/shapes3d.py
 class Shapes3D(Dataset):
     """
@@ -775,7 +734,7 @@ class DoubleShapes3DBase(Shapes3D):
         img_cat = torch.cat((sample, sample_b), dim=0)
 
         # lat_value = self.lat_values[idx]
-        return (img_cat, sample, sample_b), self.latent_values[idx]
+        return (img_cat, sample, sample_b), idx
 
 
 class DoubleShapes3D(DoubleShapes3DBase):

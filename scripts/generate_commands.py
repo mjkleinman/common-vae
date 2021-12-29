@@ -140,16 +140,40 @@ dataset = 'pceleba'
 zs = [32,64] #, 64]
 zus = [8, 16] #, 16]
 klqqs = [0.1, 1]
-klu = 10
+klus = [50, 100]
 device = 'cuda'
 batchs = [32]
 
 for z, zu in zip(zs, zus):
-    for klqq in klqqs:
+    for klqq, klu in zip(klqqs, klus):
         for batch in batchs:
             command = f"python main.py cvae_{dataset}_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} -b {batch}"
             commands += process_command(command)
-#
+
+#######################################################################################
+# Dshapes learning rule
+#######################################################################################
+
+commands = []
+device = 'cuda'
+datasets = ['dshapes2']
+epoch = 70
+zs = [7]
+zus = [1]
+klus = [10]
+klqqs = [0.1]
+batchs = [32]
+lrs = [0.0025, 0.005, 0.001,0.01,0.0001,0.0005]
+
+for dataset in datasets:
+    for lr in lrs:
+        for z, zu in zip(zs, zus):
+            for klu in klus:
+                for klqq in klqqs:
+                    for batch in batchs:
+                        command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_lr={lr}_z={z}_zu={zu} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr {lr} -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        commands += process_command(command)
+
 #######################################################################################
 # Video data
 #######################################################################################

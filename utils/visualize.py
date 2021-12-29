@@ -80,7 +80,7 @@ class Visualizer():
         self.model_dir = model_dir
         self.dataset = dataset
         # TODO: update so this doesn't need to be hardcoded
-        self.nchannels = 3 # todo: don't have this hardcoded if possible
+        self.nchannels = 3  # todo: don't have this hardcoded if possible
         if self.dataset == 'tmnist' or self.dataset == 'rmnist' or self.dataset == 'ddsprites' or self.dataset == 'ddsprites2':
             self.nchannels = 1
         self.upsample_factor = upsample_factor
@@ -334,11 +334,12 @@ class Visualizer():
         """
         n_latents = n_latents if n_latents is not None else self.model.latent_dim
 
-        reconstructions = self.reconstruct(data[:2 * n_per_latent, ...],
-                                           data_a[:2 * n_per_latent, ...],
-                                           data_b[:2 * n_per_latent, ...],
+        reconstructions = self.reconstruct(data[:1 * n_per_latent, ...],
+                                           data_a[:1 * n_per_latent, ...],
+                                           data_b[:1 * n_per_latent, ...],
                                            size=(2, n_per_latent),
                                            is_force_return=True)
+
         traversals = self.traversals(data=data[0:1, ...] if is_posterior else None,
                                      data_a=data_a[0:1, ...] if is_posterior else None,
                                      data_b=data_b[0:1, ...] if is_posterior else None,

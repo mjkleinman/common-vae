@@ -150,6 +150,9 @@ class Evaluator:
 
         # I[z_j;v_k] = E[log \sum_x q(z_j|x)p(x|v_k)] + H[z_j] = - H[z_j|v_k] + H[z_j]
         mut_info = - H_zCv + H_z
+        print(mut_info)
+        import pdb
+        pdb.set_trace()
         sorted_mut_info = torch.sort(mut_info, dim=1, descending=True)[0].clamp(min=0)
 
         metric_helpers = {'marginal_entropies': H_z, 'cond_entropies': H_zCv}
@@ -215,17 +218,21 @@ class Evaluator:
             gaussian (mean, log_var) each of shape : (len_dataset, latent_dim).
         """
         len_dataset = len(dataloader.dataset)
-        latent_dim = self.model.latent_dim
+        latent_dim = self.model.latent_dim - self.model.latent_dim_unq
         n_suff_stat = 2
 
         q_zCx = torch.zeros(len_dataset, latent_dim, n_suff_stat, device=self.device)
 
         n = 0
         with torch.no_grad():
-            for x, label in dataloader:
+            for (x, x_a, x_b), label in dataloader:
                 batch_size = x.size(0)
                 idcs = slice(n, n + batch_size)
-                q_zCx[idcs, :, 0], q_zCx[idcs, :, 1] = self.model.encoder(x.to(self.device))
+                mu_u1, lv_u1, mu_c1, lv_c1, mu_u2, lv_u2, mu_c2, lv_c2 = self.model.encoder(x_a.to(self.device), x_b.to(self.device))
+                # TODO: only using output from view A for common right now.
+                q_zCx[idcs, :, 0] = torch.cat((mu_u1, mu_c1), dim=-1)
+                q_zCx[idcs, :, 1] = torch.cat((lv_u1, lv_c1), dim=-1)
+
                 n += batch_size
 
         params_zCX = q_zCx.unbind(-1)
@@ -269,12 +276,21 @@ class Evaluator:
         # sample from p(x)
         samples_x = torch.randperm(len_dataset, device=device)[:n_samples]
         # sample from p(z|x)
-        samples_zCx = samples_zCx.index_select(0, samples_x).view(latent_dim, n_samples)
+        # samples_zCx = samples_zCx.index_select(0, samples_x).view(latent_dim, n_samples)
+        # samples_zCx = samples_zCx.index_select(0, samples_x).permute(1, 0)
+
+        # samples_zCx = samples_zCx.unsqueeze(0).expand(len_dataset, latent_dim, n_samples)
+        # mean = params_zCX[0].unsqueeze(-1).expand(len_dataset, latent_dim, n_samples)
+        # log_var = params_zCX[1].unsqueeze(-1).expand(len_dataset, latent_dim, n_samples)
+
+        # https://github.com/YannDubs/disentangling-vae/issues/64
+        samples_zCx = samples_zCx.permute(1, 0)
+        samples_zCx = samples_zCx.index_select(1, samples_x).view(latent_dim, n_samples)
+        samples_zCx = samples_zCx.view(1, latent_dim, n_samples).expand(len_dataset, latent_dim, n_samples)
+        mean = params_zCX[0].view(len_dataset, latent_dim, 1).expand(len_dataset, latent_dim, n_samples)
+        log_var = params_zCX[1].view(len_dataset, latent_dim, 1).expand(len_dataset, latent_dim, n_samples)
 
         mini_batch_size = 10
-        samples_zCx = samples_zCx.expand(len_dataset, latent_dim, n_samples)
-        mean = params_zCX[0].unsqueeze(-1).expand(len_dataset, latent_dim, n_samples)
-        log_var = params_zCX[1].unsqueeze(-1).expand(len_dataset, latent_dim, n_samples)
         log_N = math.log(len_dataset)
         with trange(n_samples, leave=False, disable=self.is_progress_bar) as t:
             for k in range(0, n_samples, mini_batch_size):

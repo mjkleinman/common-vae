@@ -102,8 +102,8 @@ def main(args):
         elif plot_type == "reconstruct-traverse":
             viz.reconstruct_traverse(samples, samples_a, samples_b,
                                      is_posterior=args.is_posterior,
-                                     n_latents=args.n_rows,
                                      n_per_latent=args.n_cols,
+                                     n_latents=args.n_rows,
                                      is_show_text=args.is_show_loss)
         elif plot_type == "gif-traversals":
             viz.gif_traversals(samples[:args.n_cols, ...],

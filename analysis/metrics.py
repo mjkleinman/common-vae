@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from torch.utils.data import DataLoader
 from sklearn.linear_model import LassoCV, MultiTaskLassoCV
 from sklearn.ensemble import RandomForestRegressor
+from sklearn import ensemble
+from sklearn.metrics import log_loss
+
 # from .testing import infer
 
 
@@ -70,11 +73,14 @@ class DCIResults:
     disentanglement_scores: np.ndarray
     overall_disentanglment: np.ndarray
     completness_scores: np.ndarray
+    log_losses: np.ndarray
+    # info_scores: np.ndarray
 
     def get_scores(self):
         return (self.overall_disentanglment,
                 self.disentanglement_scores,
-                self.completness_scores)
+                self.completness_scores,
+                self.log_losses)
 
 
 class DCIMetrics:
@@ -91,6 +97,8 @@ class DCIMetrics:
             regressor = LassoCV(**kwargs)
         elif regressor == 'random-forest':
             regressor = RandomForestRegressor(**kwargs)
+        elif regressor == 'ensemble':
+            regressor = ensemble.GradientBoostingClassifier()
         else:
             raise ValueError()
 
@@ -98,22 +106,31 @@ class DCIMetrics:
         self.n_factors = n_factors
         self.regressor = regressor
 
-    def _get_regressoR_coeffscores(self, X, y):
+    def _get_regressoR_coeffscores(self, X, y, Xtest, ytest):
         """
         Compute R_coeff{dk} for each code dimension D and each
         generative factor K
         """
         R = []
+        train_errors = []
+        test_errors = []
+        log_losses = []
 
         for k in range(self.n_factors):
             y_k = y[:, k]
+            y_test = ytest[:, k]
             if len(np.unique(y_k)) > 1:
                 self.regressor.fit(X, y_k)
-                R.append(np.abs(self.regressor.coef_))
+                train_errors.append(sum(self.regressor.predict(X) == y_k.numpy()) / len(y_k))
+                test_errors.append(sum(self.regressor.predict(Xtest) == y_test.numpy()) / len(y_test))
+                log_losses.append(log_loss(y_true=y_test.numpy(), y_pred=self.regressor.predict_proba(Xtest)))
+                # err = np.sum((yp - y_k.numpy()) ** 2) / len(yp)
+                # R.append(np.abs(self.regressor.coef_))
+                R.append(np.abs(self.regressor.feature_importances_))
             else:
                 R.append(np.zeros(7))
 
-        return np.stack(R).T
+        return np.stack(R).T, np.stack(train_errors).T, np.stack(test_errors).T, np.stack(log_losses).T
 
     def _disentanglement(self, R_coeff):
         """
@@ -167,18 +184,22 @@ class DCIMetrics:
         else:
             X, y = model_zs
 
-        X = (X - X.mean(axis=0)) #/ (X.std(axis=0) + EPS)
-        y = (y - y.mean(axis=0)) / (y.std(axis=0) + EPS)
+        X = (X - X.mean(axis=0))  # / (X.std(axis=0) + EPS)
+        # y = (y - y.mean(axis=0)) / (y.std(axis=0) + EPS)
 
-        R_coeff = self._get_regressoR_coeffscores(X, y)
+        ntrain = int(0.8 * X.shape[0])
+        R_coeff, err_tr, err_test, log_losses = self._get_regressoR_coeffscores(X[:ntrain, :], y[:ntrain], X[ntrain:, :], y[ntrain:])
         # print(R_coeff)
 
         # compute metrics
         d_scores, total_d_score = self._disentanglement(R_coeff)
         c_scores = self._completness(R_coeff)
+        print(f'train acc is {err_tr}')
+        print(f'test acc is {err_test}')
+        print(f'log losses on test set is {log_losses}')
         # info_score = self._informativeness(X, y)
 
-        return DCIResults(R_coeff, d_scores, total_d_score, c_scores)
+        return DCIResults(R_coeff, d_scores, total_d_score, c_scores, log_losses)
 
     def __call__(self, model, model_zs=None):
         return self.compute_score(model, model_zs)
