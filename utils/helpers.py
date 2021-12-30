@@ -78,6 +78,30 @@ def check_bounds(value, type=float, lb=-float("inf"), ub=float("inf"),
     return value
 
 
+def infer(model, data):
+    with torch.no_grad():
+        model.eval()
+        device = next(model.parameters()).device
+
+        latents, targets = [], []
+        for x, t in data:
+            x, xa, xb = x
+            x = x.to(device=device)
+            xa = xa.to(device=device)
+            xb = xb.to(device=device)
+
+            pmu1, plu1, pmc1, plc1, pmu2, plu2, _, _ = model.encoder(xa, xb)
+            post_mean = torch.cat((pmu1, pmc1, pmu2), dim=-1)  # just using the mean from xa
+            latents.append(post_mean.cpu())
+            targets.append(t)
+            break
+
+    latents = torch.cat(latents)
+    targets = torch.cat(targets)
+
+    return latents, targets
+
+
 class FormatterNoDuplicate(argparse.ArgumentDefaultsHelpFormatter):
     """Formatter overriding `argparse.ArgumentDefaultsHelpFormatter` to show
     `-e, --epoch EPOCH` instead of `-e EPOCH, --epoch EPOCH`
