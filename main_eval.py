@@ -22,7 +22,7 @@ args = parser.parse_args()
 device = 'cuda'
 if args.dataset == 'ddsprites2':
     latent_sizes = [3, 6, 40, 32, 32]
-elif args.dataset == 'dshapes2':
+else:
     latent_sizes = [10, 10, 10, 8, 4, 15]
 
 
