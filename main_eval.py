@@ -1,5 +1,5 @@
 from utils.datasets import get_dataloaders, get_img_size, DATASETS
-from utils.helpers import infer
+from utils.helpers import infer, store_object
 from disvae.utils.modelIO import save_model, load_model, load_metadata
 from analysis.metrics import DCIMetrics
 from analysis.hinton import hinton
@@ -52,6 +52,11 @@ vae_scores_common = eastwood_common(model, model_zs=metric_data_common)
 metric_data_unique = (l[:, :args.nu], t)
 eastwood_unique = DCIMetrics(metric_data, n_factors=args.num_factors, regressor='ensemble')
 vae_scores_unique = eastwood_unique(model, model_zs=metric_data_unique)
+
+# Save files for plotting
+store_object(vae_scores, 'disent_scores.p', exp_dir)
+store_object(vae_scores_common, 'disent_scores_common.p', exp_dir)
+store_object(vae_scores_unique, 'disent_scores_unique.p', exp_dir)
 
 # vae_R = vae_scores.R_coeff
 # hinton(vae_R, 'factor', 'latent', fontsize=18, save_plot=True, figs_dir=exp_dir)

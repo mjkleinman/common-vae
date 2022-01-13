@@ -5,6 +5,7 @@ import ast
 import configparser
 import argparse
 import random
+import pickle
 
 import torch
 
@@ -100,6 +101,19 @@ def infer(model, data):
     targets = torch.cat(targets)
 
     return latents, targets
+
+
+def store_object(obj, name, path):
+    f = open(os.path.join(path, name), 'wb')
+    pickle.dump(obj, f)
+    f.close()
+
+
+def retrieve_object(name, path):
+    f = open(os.path.join(path, name), 'rb')
+    obj = pickle.load(f)
+    f.close()
+    return obj
 
 
 class FormatterNoDuplicate(argparse.ArgumentDefaultsHelpFormatter):
