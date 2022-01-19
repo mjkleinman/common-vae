@@ -88,6 +88,7 @@ def get_dataloaders(dataset, root=None, shuffle=True, pin_memory=True,
                       batch_size=batch_size,
                       shuffle=shuffle,
                       pin_memory=pin_memory,
+                      num_workers=4,
                       **kwargs)
 
 

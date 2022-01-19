@@ -4,9 +4,10 @@ import sys
 
 from utils.helpers import FormatterNoDuplicate, check_bounds, set_seed
 from utils.visualize import Visualizer
-from utils.viz_helpers import get_samples
+from utils.viz_helpers import get_samples, get_samples_both_views
 from main import RES_DIR
 from disvae.utils.modelIO import load_model, load_metadata
+import pdb
 
 
 PLOT_TYPES = ['generate-samples', 'data-samples', 'reconstruct', "traversals",
@@ -81,6 +82,7 @@ def main(args):
     # same samples for all plots: sample max then take first `x`data  for all plots
     num_samples = args.n_cols * args.n_rows
     samples, samples_a, samples_b = get_samples(dataset, num_samples, idcs=args.idcs)
+    # pdb.set_trace()
 
     if "all" in args.plots:
         args.plots = [p for p in PLOT_TYPES if p != "all"]
@@ -89,7 +91,9 @@ def main(args):
         if plot_type == 'generate-samples':
             viz.generate_samples(size=size)
         elif plot_type == 'data-samples':
-            viz.data_samples(samples, size=size)
+            samples_a_new, samples_b_new = get_samples_both_views(dataset, num_samples, idcs=args.idcs)
+            viz.data_samples(samples_a_new, size=size, prefix='ViewA_')
+            viz.data_samples(samples_b_new, size=size, prefix='ViewB_')
         elif plot_type == "reconstruct":
             viz.reconstruct(samples, samples_a, samples_b, size=size)
         elif plot_type == 'traversals':
@@ -98,7 +102,7 @@ def main(args):
                            data_b=samples_b[0:1, ...] if args.is_posterior else None,
                            n_per_latent=args.n_cols,
                            n_latents=args.n_rows,
-                           is_reorder_latents=True)
+                           is_reorder_latents=False)
         elif plot_type == "reconstruct-traverse":
             viz.reconstruct_traverse(samples, samples_a, samples_b,
                                      is_posterior=args.is_posterior,

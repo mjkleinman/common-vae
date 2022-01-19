@@ -12,6 +12,18 @@ from utils.helpers import set_seed
 
 FPS_GIF = 12
 
+def get_samples_both_views(dataset, num_samples, idcs=0):
+
+    data_loader = get_dataloaders(dataset,
+                                  batch_size=1,
+                                  shuffle=False)  # idcs is None)
+
+    _, samples_a, samples_b = data_loader.dataset[idcs][0]
+    samples_a = torch.stack([samples_a], dim=0)
+    samples_b = torch.stack([samples_b], dim=0)
+
+    return samples_a, samples_b
+
 
 def get_samples(dataset, num_samples, idcs=[]):
     """ Generate a number of samples from the dataset.
@@ -29,16 +41,25 @@ def get_samples(dataset, num_samples, idcs=[]):
     """
     data_loader = get_dataloaders(dataset,
                                   batch_size=1,
-                                  shuffle=idcs is None)
+                                  shuffle=False)  # idcs is None)
 
     idcs += random.sample(range(len(data_loader.dataset)), num_samples - len(idcs))
+    # idcs = [0]
     nchannels = 3
     # TODO: update so this doesn't need to be hardcoded
     if dataset == 'tmnist' or dataset == 'rmnist' or dataset == 'ddsprites' or dataset == 'ddsprites2':
         nchannels = 1
-    samples = torch.stack([data_loader.dataset[i][0][0][:nchannels, ...] for i in idcs], dim=0)
-    samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
-    samples_b = torch.stack([data_loader.dataset[i][0][2] for i in idcs], dim=0)
+    # samples = torch.stack([data_loader.dataset[i][0][0][:nchannels, ...] for i in idcs], dim=0)
+    # samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
+    # samples_b = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
+
+    # this should get rid of randomness (TEST)
+    samples = torch.stack([data_loader.dataset[i][0][0] for i in idcs], dim=0)
+    samples_a = samples[:, :nchannels, ...]
+    samples_b = samples[:, nchannels:, ...]
+    # samples_a = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
+    # samples_b = torch.stack([data_loader.dataset[i][0][1] for i in idcs], dim=0)
+
     print("Selected idcs: {}".format(idcs))
 
     return samples, samples_a, samples_b

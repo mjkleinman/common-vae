@@ -8,7 +8,7 @@ import pandas as pd
 from disvae.utils.modelIO import load_np_arrays
 from utils.helpers import retrieve_object
 from analysis.hinton import hinton
-
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', type=str, help="Name of the model for storing and loading purposes.")
@@ -19,9 +19,14 @@ parser.add_argument('--nz', type=int, help="Number of latents")
 parser.add_argument('--num-factors', type=int, help="Number of factors")
 args = parser.parse_args()
 
-exp_dir = args.name
-exp_dir = os.path.join(args.result_dir, exp_dir)
+seeds = ['0', '1', '2']
+disent_scores = []
 
-vae_scores = retrieve_object('disent_scores.p', path=exp_dir)
-vae_R = vae_scores.R_coeff
-hinton(vae_R, 'factor', 'latent', fontsize=18, save_plot=True, figs_dir=exp_dir)
+for seed in seeds:
+    exp_dir = args.name + seed
+    exp_dir = os.path.join(args.result_dir, exp_dir)
+    vae_scores = retrieve_object('disent_scores.p', path=exp_dir)
+    disent_scores.append(vae_scores.overall_disentanglment)
+
+print(f"mean: {np.mean(disent_scores)}")
+print(f"std: {np.std(disent_scores)}")

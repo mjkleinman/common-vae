@@ -20,7 +20,7 @@ parser.add_argument('--nz', type=int, help="Number of latents")
 parser.add_argument('--num-factors', type=int, help="Number of factors")
 args = parser.parse_args()
 device = 'cuda'
-if args.dataset == 'ddsprites2':
+if args.dataset.startswith('ddsprites'):  # == 'ddsprites2':
     latent_sizes = [3, 6, 40, 32, 32]
 else:
     latent_sizes = [10, 10, 10, 8, 4, 15]
@@ -34,7 +34,7 @@ test_loader = get_dataloaders(args.dataset,
 # for this experiment, there were 7 latent components.
 # first 2 are unique for view1, middle 3 are common, and last 2 are unique for view2
 exp_dir = args.name
-exp_dir = 'results/' + exp_dir
+exp_dir = 'results-paper/' + exp_dir
 model = load_model(exp_dir, is_gpu=True)
 l, t = infer(model, test_loader)
 
@@ -53,18 +53,27 @@ metric_data_unique = (l[:, :args.nu], t)
 eastwood_unique = DCIMetrics(metric_data, n_factors=args.num_factors, regressor='ensemble')
 vae_scores_unique = eastwood_unique(model, model_zs=metric_data_unique)
 
+# Unique latents for View B
+metric_data_uniqueB = (l[:, -args.nu:], t)
+eastwood_uniqueB = DCIMetrics(metric_data, n_factors=args.num_factors, regressor='ensemble')
+vae_scores_uniqueB = eastwood_uniqueB(model, model_zs=metric_data_uniqueB)
+
 # Save files for plotting
 store_object(vae_scores, 'disent_scores.p', exp_dir)
 store_object(vae_scores_common, 'disent_scores_common.p', exp_dir)
 store_object(vae_scores_unique, 'disent_scores_unique.p', exp_dir)
+store_object(vae_scores_uniqueB, 'disent_scores_uniqueB.p', exp_dir)
+
 
 # vae_R = vae_scores.R_coeff
 # hinton(vae_R, 'factor', 'latent', fontsize=18, save_plot=True, figs_dir=exp_dir)
 with open(os.path.join(exp_dir, 'metrics.txt'), 'w') as f:
     f.write('common log losses: ' + str(vae_scores_common.log_losses) + "\n")
     f.write('unique log losses: ' + str(vae_scores_unique.log_losses) + "\n")
+    f.write('unique_B log losses: ' + str(vae_scores_uniqueB.log_losses) + "\n")
     f.write('total log losses: ' + str(vae_scores.log_losses) + "\n")
 
     f.write('common info: ' + str(1.44 * (np.log(latent_sizes) - vae_scores_common.log_losses)) + "\n")
     f.write('unique info: ' + str(1.44 * (np.log(latent_sizes) - vae_scores_unique.log_losses)) + "\n")
+    f.write('unique info B: ' + str(1.44 * (np.log(latent_sizes) - vae_scores_uniqueB.log_losses)) + "\n")
     f.write('total info: ' + str(1.44 * (np.log(latent_sizes) - vae_scores.log_losses)) + "\n")

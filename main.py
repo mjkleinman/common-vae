@@ -17,7 +17,7 @@ from utils.visualize import GifTraversalsTraining
 
 
 CONFIG_FILE = "hyperparam.ini"
-RES_DIR = 'results' #"results-paper-010822"
+RES_DIR = 'results-paper' #"results-paper-010822"
 LOG_LEVELS = list(logging._levelToName.values())
 ADDITIONAL_EXP = ['custom', "debug", "best_celeba", "best_dsprites"]
 EXPERIMENTS = ADDITIONAL_EXP + ["{}_{}".format(loss, data)
