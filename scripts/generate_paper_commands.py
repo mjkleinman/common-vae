@@ -31,7 +31,7 @@ def check_exists(logdir):
 def process_command(command):
     arr = command.split(' ')
     logdir = arr[arr.index('main.py') + 1]
-    if check_exists(os.path.join('results-video/results', logdir)):
+    if check_exists(os.path.join('results-paper', logdir)):
         sys.stderr.write(f"Skipping {logdir}\n")
         return []
     else:
@@ -179,18 +179,139 @@ def process_command(command):
 # Video data
 #######################################################################################
 
+# commands = []
+# frames = [0, 1, 2, 3, 4, 5, 6, 7]
+# dataset = 'vsprites'
+# z = 9
+# zu = 3
+# epoch = 25
+# klu = 10
+# klqqs = [0.1, 0.5, 1]
+
+# for frame in frames:
+#     for klqq in klqqs:
+#         command = f"python main.py {dataset}_frames={frame}_z={z}_zu={zu}_epoch={epoch}_klu={klu}_klqq={klqq} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.005 -b 32 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device cuda --frames {frame}"
+#         commands += process_command(command)
+
+
+#######################################################################################
+# Dsprites new random seeds
+#######################################################################################
+
+# commands = []
+# device = 'cuda'
+# datasets = ['ddsprites2']
+# epoch = 70
+# zs = [7]
+# zus = [2]
+# klus = [10]
+# klqqs = [0.1]
+# seeds = [0, 1, 2]
+
+# for seed in seeds:
+#     for dataset in datasets:
+#         for z, zu in zip(zs, zus):
+#             for klu in klus:
+#                 for klqq in klqqs:
+#                     command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+#                     commands += process_command(command)
+
+
+# #######################################################################################
+# # Shapes3d new random seeds
+# #######################################################################################
+
+# # commands = []
+# device = 'cuda'
+# datasets = ['dshapes']
+# epoch = 70
+# zs = [9]
+# zus = [3]
+# klus = [10]
+# klqqs = [0.1]
+# batchs = [128]
+# seeds = [0, 1, 2]
+
+# for seed in seeds:
+#     for dataset in datasets:
+#         for z, zu in zip(zs, zus):
+#             for klu in klus:
+#                 for klqq in klqqs:
+#                     for batch in batchs:
+#                         command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+#                         commands += process_command(command)
+
+
+#######################################################################################
+# Shapes3d new random seeds View (Different batch size)
+#######################################################################################
 commands = []
-frames = [0, 1, 2, 3, 4, 5, 6, 7]
-dataset = 'vsprites'
-z = 9
-zu = 3
-epoch = 25
-klu = 10
-klqqs = [0.1, 0.5, 1]
+device = 'cuda'
+datasets = ['dshapes2']
+epoch = 70
+zs = [7]
+zus = [1]
+klus = [10]
+klqqs = [0.1]
+batchs = [32, 64, 128, 256]
+seeds = [0, 1, 2]
 
-for frame in frames:
-    for klqq in klqqs:
-        command = f"python main.py {dataset}_frames={frame}_z={z}_zu={zu}_epoch={epoch}_klu={klu}_klqq={klqq} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.005 -b 32 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device cuda --frames {frame}"
-        commands += process_command(command)
+for seed in seeds:
+    for dataset in datasets:
+        for z, zu in zip(zs, zus):
+            for klu in klus:
+                for klqq in klqqs:
+                    for batch in batchs:
+                        command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        commands += process_command(command)
 
-merge_commands(commands, gpu_cnt=1, put_device_id=True)
+#######################################################################################
+# Dsprites new batch sizes
+#######################################################################################
+
+# commands = []
+device = 'cuda'
+datasets = ['ddsprites2']
+epoch = 70
+zs = [7]
+zus = [2]
+klus = [10]
+klqqs = [0.1]
+seeds = [0, 1, 2]
+batchs = [32, 64, 128, 256]
+
+for seed in seeds:
+    for batch in batchs:
+        for dataset in datasets:
+            for z, zu in zip(zs, zus):
+                for klu in klus:
+                    for klqq in klqqs:
+                        command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        commands += process_command(command)
+
+
+########################################################################################
+# dsprites common
+# #######################################################################################
+
+commands = []
+device = 'cuda'
+datasets = ['ddsprites']
+epoch = 70
+zs = [8]
+zus = [3]
+klus = [10]
+klqqs = [0.1]
+seeds = [0, 1, 2]
+batchs = [64, 128]
+
+for seed in seeds:
+    for batch in batchs:
+        for dataset in datasets:
+            for z, zu in zip(zs, zus):
+                for klu in klus:
+                    for klqq in klqqs:
+                        command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        commands += process_command(command)
+
+merge_commands(commands, gpu_cnt=4, put_device_id=True)

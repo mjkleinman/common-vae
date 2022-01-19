@@ -186,7 +186,7 @@ class Visualizer():
         generated = self._decode_latents(prior_samples)
         return self._save_or_return(generated.data, size, PLOT_NAMES["generate_samples"])
 
-    def data_samples(self, data, size=(8, 8)):
+    def data_samples(self, data, size=(8, 8), prefix=''):
         """Plot samples from the dataset
 
         Parameters
@@ -198,7 +198,7 @@ class Visualizer():
             Size of the final grid.
         """
         data = data[:size[0] * size[1], ...]
-        return self._save_or_return(data, size, PLOT_NAMES["data_samples"])
+        return self._save_or_return(data, size, prefix + PLOT_NAMES["data_samples"])
 
     def reconstruct(self, data, data_a, data_b, size=(8, 8), is_original=True, is_force_return=False):
         """Generate reconstructions of data through the model.

@@ -17,7 +17,7 @@ from utils.visualize import GifTraversalsTraining
 
 
 CONFIG_FILE = "hyperparam.ini"
-RES_DIR = "results"
+RES_DIR = 'results-paper' #"results-paper-010822"
 LOG_LEVELS = list(logging._levelToName.values())
 ADDITIONAL_EXP = ['custom', "debug", "best_celeba", "best_dsprites"]
 EXPERIMENTS = ADDITIONAL_EXP + ["{}_{}".format(loss, data)
@@ -158,6 +158,11 @@ def parse_arguments(args_to_parse):
                             default=default_config['eval_batchsize'],
                             help='Batch size for evaluation.')
 
+    # new options for video
+    video = parser.add_argument_group('Video specific options')
+    video.add_argument('-f', '--frames', type=int,
+                       help='Difference in frames'),
+
     args = parser.parse_args(args_to_parse)
     if args.experiment != 'custom':
         if args.experiment not in ADDITIONAL_EXP:
@@ -196,7 +201,7 @@ def main(args):
     logger.addHandler(stream)
 
     set_seed(args.seed)
-    device = args.device #get_device(is_gpu=not args.no_cuda)# args.device
+    device = args.device  # get_device(is_gpu=not args.no_cuda)# args.device
     print(device)
     exp_dir = os.path.join(RES_DIR, args.name)
     logger.info("Root directory for saving and loading experiments: {}".format(exp_dir))
@@ -213,7 +218,8 @@ def main(args):
         # PREPARES DATA
         train_loader = get_dataloaders(args.dataset,
                                        batch_size=args.batch_size,
-                                       logger=logger)
+                                       logger=logger,
+                                       frames=args.frames)
         logger.info("Train {} with {} samples".format(args.dataset, len(train_loader.dataset)))
 
         # PREPARES MODEL
@@ -249,7 +255,8 @@ def main(args):
         test_loader = get_dataloaders(metadata["dataset"],
                                       batch_size=args.eval_batchsize,
                                       shuffle=False,
-                                      logger=logger)
+                                      logger=logger,
+                                      frames=args.frames)
         loss_f = get_loss_f(args.loss,
                             n_data=len(test_loader.dataset),
                             **vars(args))

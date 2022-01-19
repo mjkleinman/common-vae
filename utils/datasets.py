@@ -20,6 +20,7 @@ from torchvision.transforms.functional import InterpolationMode
 
 from utils.groundtruth.shapes import DoubleShapes3D, DoubleShapes3DViewUnq
 from utils.groundtruth.dsprites import DoubleDSprites, DoubleDSpritesPosUnique
+from data.Sprites.load_sprites import sprites_act
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 COLOUR_BLACK = 0
@@ -37,7 +38,8 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "ddsprites": "DoubleDSprites",
                  "ddsprites2": "DoubleDSpritesPosUnique",
                  "dshapes": "DoubleShapes3D",
-                 "dshapes2": "DoubleShapes3DViewUnq"}
+                 "dshapes2": "DoubleShapes3DViewUnq",
+                 "vsprites": "VideoSprites"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -62,7 +64,7 @@ def get_background(dataset):
 
 
 def get_dataloaders(dataset, root=None, shuffle=True, pin_memory=True,
-                    batch_size=128, logger=logging.getLogger(__name__), **kwargs):
+                    batch_size=128, logger=logging.getLogger(__name__), frames=None, **kwargs):
     """A generic data loader
 
     Parameters
@@ -78,11 +80,15 @@ def get_dataloaders(dataset, root=None, shuffle=True, pin_memory=True,
     """
     pin_memory = pin_memory and torch.cuda.is_available  # only pin if GPU available
     Dataset = get_dataset(dataset)
-    dataset = Dataset(logger=logger) if root is None else Dataset(root=root, logger=logger)
+    if frames is not None:
+        dataset = Dataset(logger=logger, frames=frames)
+    else:
+        dataset = Dataset(logger=logger) if root is None else Dataset(root=root, logger=logger)
     return DataLoader(dataset,
                       batch_size=batch_size,
                       shuffle=shuffle,
                       pin_memory=pin_memory,
+                      num_workers=4,
                       **kwargs)
 
 
@@ -416,6 +422,50 @@ class FashionMNIST(datasets.FashionMNIST):
                          ]))
 
 
+class PairVideoDataset(datasets.HMDB51):
+    def __init__(self, train_tfms, num_frames=16, clip_steps=50, train=True):
+        super().__init__('data/hmdb/video_data/', 'data/hmdb/test_train_splits/', num_frames,
+                         step_between_clips=clip_steps, fold=1, train=train,
+                         transform=train_tfms)
+
+    # https://pytorch.org/vision/stable/_modules/torchvision/datasets/hmdb51.html
+    def __getitem__(self, idx):
+        video, audio, _, video_idx = self.video_clips.get_clip(idx)
+        sample_index = self.indices[video_idx]
+        _, class_index = self.samples[sample_index]
+
+        if self.transform is not None:
+            video = self.transform(video)
+
+        # taking the first and second frame for now
+        return video[:, 0, :, :], video[:, 1, :, :]  # , audio, class_index
+
+    def __len__(self):
+        return self.video_clips.num_clips()
+
+
+class VideoSprites(Dataset):
+    img_size = (3, 64, 64)  # need to define the image size to be compatible
+    background_color = COLOUR_BLACK
+
+    def __init__(self, logger, frames):
+        X_train, X_test, A_train, A_test, D_train, D_test = sprites_act('data/Sprites/', return_labels=True)
+        # Here X_train contains the video frames, represented as an numpy.array with shape (N_train, T, width, height, N_channel)
+        self.X_train = torch.from_numpy(X_train).permute(0, 1, 4, 2, 3)
+        self.logger = logger
+        self.delta_frames = frames
+
+    def __getitem__(self, idx):
+         # taking the first and last frame for now
+        img1 = self.X_train[idx, 0, ...]
+        img2 = self.X_train[idx, self.delta_frames, ...]
+        img_cat = torch.cat((img1, img2), dim=0)
+        return (img_cat, img1, img2), 0
+
+    def __len__(self):
+        return len(self.X_train)
+
+
 # HELPERS
 def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
     """Preprocess a folder of images.
@@ -463,7 +513,8 @@ if __name__ == '__main__':
     dataPath = ""
     # dataset = DoubleRotateMNIST()
     # dataset = DoubleShapes3D()
-    dataset = DoubleDSprites()
+    # dataset = DoubleDSprites()
+    dataset = VideoSprites()
     pin_memory = torch.cuda.is_available
     dataloader = DataLoader(dataset,
                             batch_size=4,
