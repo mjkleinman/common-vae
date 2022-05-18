@@ -91,9 +91,9 @@ def main(args):
         if plot_type == 'generate-samples':
             viz.generate_samples(size=size)
         elif plot_type == 'data-samples':
-            samples_a_new, samples_b_new = get_samples_both_views(dataset, num_samples, idcs=args.idcs)
-            viz.data_samples(samples_a_new, size=size, prefix='ViewA_')
-            viz.data_samples(samples_b_new, size=size, prefix='ViewB_')
+            # samples_a_new, samples_b_new = get_samples_both_views(dataset, num_samples, idcs=args.idcs)
+            viz.data_samples(samples_a, size=size, prefix='ViewA_')
+            viz.data_samples(samples_b, size=size, prefix='ViewB_')
         elif plot_type == "reconstruct":
             viz.reconstruct(samples, samples_a, samples_b, size=size)
         elif plot_type == 'traversals':

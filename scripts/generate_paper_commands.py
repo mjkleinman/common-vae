@@ -314,4 +314,25 @@ for seed in seeds:
                         command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
                         commands += process_command(command)
 
+#######################################################################################
+# Comparing the tangling
+#######################################################################################
+commands = []
+device = 'cuda'
+datasets = ['tmnist']
+epoch = 50
+zs = [8]
+zus = [2]
+klu = 10
+klqqs = [0.1]
+batch = 128
+seeds = [0, 1, 2]
+
+for seed in seeds:
+    for dataset in datasets:
+        for z, zu in zip(zs, zus):
+            for klqq in klqqs:
+                command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} -b {batch} --gamma-klqq {klqq} --device {device}"
+                commands += process_command(command)
+
 merge_commands(commands, gpu_cnt=4, put_device_id=True)
