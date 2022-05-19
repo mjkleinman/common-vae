@@ -379,7 +379,10 @@ class TangleMNIST(MNIST):
         x_a_rotate = self.transform(x_a_rotate)
         x_b_rotate = self.transform(x_b_rotate)
         img_cat = torch.cat((x_a_rotate, x_b_rotate), dim=0)
-        return (img_cat, x_a_rotate, x_b_rotate), 0
+
+        target_rot = torch.floor((rot_a + 45) / 9).long()
+        latent = torch.tensor([target, target_rot])
+        return (img_cat, x_a_rotate, x_b_rotate), latent
 
 
 class DoubleRotateMNIST(MNIST):
@@ -514,7 +517,7 @@ if __name__ == '__main__':
     # dataset = DoubleRotateMNIST()
     # dataset = DoubleShapes3D()
     # dataset = DoubleDSprites()
-    dataset = VideoSprites()
+    dataset = TangleMNIST()
     pin_memory = torch.cuda.is_available
     dataloader = DataLoader(dataset,
                             batch_size=4,

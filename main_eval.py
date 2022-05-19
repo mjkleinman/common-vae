@@ -18,16 +18,19 @@ parser.add_argument('--dataset', type=str)
 parser.add_argument('--nu', type=int, help="Number of unique latents")
 parser.add_argument('--nz', type=int, help="Number of latents")
 parser.add_argument('--num-factors', type=int, help="Number of factors")
+parser.add_argument('--num-samples', type=int,  default=10000, help="Number of samples")
 args = parser.parse_args()
 device = 'cuda'
 if args.dataset.startswith('ddsprites'):  # == 'ddsprites2':
     latent_sizes = [3, 6, 40, 32, 32]
+elif args.dataset == 'tmnist':
+    latent_sizes = [10, 10]
 else:
     latent_sizes = [10, 10, 10, 8, 4, 15]
 
 
 test_loader = get_dataloaders(args.dataset,
-                              batch_size=10000,
+                              batch_size=args.num_samples,
                               shuffle=True,
                               logger=None)
 
