@@ -6,21 +6,25 @@ The main training script is `main.py`.
 
 For example, to train on multiple views of dsprites:
 
-`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=2 -s 2 -d ddsprites -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e 70 -z 8 -zu 3 --gamma-klu 10 --gamma-klqq 0.1`
+`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 -s 0 -d ddsprites -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b 128 -e 70 -z 8 -zu 3 --gamma-klu 10 --gamma-klqq 0.1`
 
-These commands (and the others used in the paper) are generated in `scripts/generate_paper_commands.py`. Plotting scripts (which show how to load logged data) begin with `plot_*`.
+These commands (and the others used in the paper) are generated in `scripts/generate_paper_commands.py`.
 
 ## Evaluating Information and Disentanglement
 
 The main evaluation script is `main_eval.py`. For example, run:
 
-`python main_eval.py --name cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=2 --dataset ddsprites --nu 3 --nz 8 --num-factors 5`
+`python main_eval.py --name cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 --dataset ddsprites --nu 3 --nz 8 --num-factors 5`
+
+Note that `--num-factors` corresponds to the number of latent factors.
 
 ## Generating visualizations
 
 The main visualization script is `main_viz.py`. Run
 
-`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=2` traversals -r 8
+`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0` traversals -r 8
+
+Plotting scripts (which show how to load logged data) begin with `plot_*`
 
 ## Requirements
 
