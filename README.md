@@ -16,13 +16,13 @@ The main evaluation script is `main_eval.py`. For example, run:
 
 `python main_eval.py --name cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 --dataset ddsprites --nu 3 --nz 8 --num-factors 5`
 
-Note that `--num-factors` corresponds to the number of latent factors.
+Note that `--num-factors 5` corresponds to the number of latent factors.
 
 ## Generating visualizations
 
 The main visualization script is `main_viz.py`. Run
 
-`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0` traversals -r 8
+`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 traversals -r 8`
 
 Plotting scripts (which show how to load logged data) begin with `plot_*`
 
