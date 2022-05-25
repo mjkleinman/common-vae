@@ -294,7 +294,7 @@ for seed in seeds:
 # dsprites common
 # #######################################################################################
 
-commands = []
+# commands = []
 device = 'cuda'
 datasets = ['ddsprites']
 epoch = 70
@@ -317,7 +317,7 @@ for seed in seeds:
 #######################################################################################
 # Comparing the tangling
 #######################################################################################
-commands = []
+# commands = []
 device = 'cuda'
 datasets = ['tmnist']
 epoch = 50

@@ -22,11 +22,13 @@ Note that `--num-factors 5` corresponds to the number of ground-truth latent fac
 
 The main visualization script is `main_viz.py`. To generate traversals, run:
 
-`python main.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 traversals -r 8`
+`python main_viz.py cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0 traversals -r 8`
 
 Plotting scripts (which show how to load logged data) begin with `plot_*`. For example, run:
 
-`python plot_disentanglement_hinton.py --result-dir results --name  cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0`
+`python plot_disentanglement_hinton.py --result-dir results-paper-05 --name  cvae_ddsprites_randSample_klqq=0.1_klu=10_epoch=70_batch=128_z=8_zu=3_seed=0`
+
+Visualizations, plots, and metrics will be in `results/{name}`
 
 ## Requirements
 
