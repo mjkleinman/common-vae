@@ -31,7 +31,8 @@ def get_loss_f(loss_name, **kwargs_parse):
         return CommonLatentLoss(gamma=kwargs_parse['gamma'],
                                 gamma_klu=kwargs_parse['gamma_klu'],
                                 gamma_klc=kwargs_parse['gamma_klc'],
-                                gamma_klqq=kwargs_parse['gamma_klqq'], **kwargs_all)
+                                gamma_klqq=kwargs_parse['gamma_klqq'],
+                                use_anneal_klqq=kwargs_parse['use_anneal_klqq'], **kwargs_all)
     elif loss_name == "betaB":
         return BetaBLoss(C_init=kwargs_parse["betaB_initC"],
                          C_fin=kwargs_parse["betaB_finC"],
@@ -397,12 +398,13 @@ class BtcvaeLoss(BaseLoss):
 
 
 class CommonLatentLoss(BaseLoss):
-    def __init__(self, gamma, gamma_klu, gamma_klc, gamma_klqq, **kwargs):
+    def __init__(self, gamma, gamma_klu, gamma_klc, gamma_klqq, use_anneal_klqq, **kwargs):
         super().__init__(**kwargs)
         self.gamma = gamma
         self.gamma_klu = gamma_klu
         self.gamma_klc = gamma_klc
         self.gamma_klqq = gamma_klqq
+        self.use_anneal_klqq = use_anneal_klqq
 
     def __call__(self, data, recon_data, latent_dist, is_train, storer, **kwargs):
         storer = self._pre_call(is_train, storer)
@@ -417,6 +419,10 @@ class CommonLatentLoss(BaseLoss):
         klqq_loss = _kl_div2_loss(mu_c1, logvar_c1, mu_c2, logvar_c2)  # add this in
         kl_loss = self.gamma_klu * kl_loss_u + self.gamma_klc * kl_loss_c  # todo: scale the c
 
+        if self.use_anneal_klqq:
+            anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
+                          if is_train else 1)
+            klqq_loss = anneal_reg * klqq_loss
         # anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
         #              if is_train else 1)
         loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss 

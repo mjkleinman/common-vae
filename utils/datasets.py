@@ -20,7 +20,7 @@ from torchvision.transforms.functional import InterpolationMode
 
 from utils.groundtruth.shapes import DoubleShapes3D, DoubleShapes3DViewUnq
 from utils.groundtruth.dsprites import DoubleDSprites, DoubleDSpritesPosUnique
-from data.Sprites.load_sprites import sprites_act
+#from data.Sprites.load_sprites import sprites_act
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 COLOUR_BLACK = 0

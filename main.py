@@ -143,6 +143,7 @@ def parse_arguments(args_to_parse):
                       default=100)
     cvae.add_argument('--gamma-klc', type=float,
                       default=0.1)
+    cvae.add_argument('--use_anneal_klqq', action='store_true', default=False,) # adding in to test increasing klqq for neurips rebuttal (aug 5)
     # Learning options
     evaluation = parser.add_argument_group('Evaluation specific options')
     evaluation.add_argument('--is-eval-only', action='store_true',

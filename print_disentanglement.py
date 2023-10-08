@@ -19,7 +19,7 @@ parser.add_argument('--nz', type=int, help="Number of latents")
 parser.add_argument('--num-factors', type=int, help="Number of factors")
 args = parser.parse_args()
 
-seeds = ['0', '1', '2']
+seeds = ['0'] #, '1', '2']
 disent_scores = []
 
 for seed in seeds:
