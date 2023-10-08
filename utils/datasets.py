@@ -18,7 +18,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, datasets
 from torchvision.transforms.functional import InterpolationMode
 
-from utils.groundtruth.shapes import DoubleShapes3D, DoubleShapes3DViewUnq
+from utils.groundtruth.shapes import DoubleShapes3D, DoubleShapes3DViewUnq, DoubleShapes3DCorrelated
 from utils.groundtruth.dsprites import DoubleDSprites, DoubleDSpritesPosUnique
 #from data.Sprites.load_sprites import sprites_act
 
@@ -39,6 +39,7 @@ DATASETS_DICT = {"mnist": "MNIST",
                  "ddsprites2": "DoubleDSpritesPosUnique",
                  "dshapes": "DoubleShapes3D",
                  "dshapes2": "DoubleShapes3DViewUnq",
+                 "dshapescorr": "DoubleShapes3DCorrelated",
                  "vsprites": "VideoSprites"}
 DATASETS = list(DATASETS_DICT.keys())
 

@@ -162,3 +162,23 @@ class DoubleShapes3DViewUnq(DoubleShapes3DBase):
                 samples_b[:, lat_i] = np.random.randint(lat_size, size=size)
 
         return samples, samples_b
+
+
+class DoubleShapes3DCorrelated(DoubleShapes3DBase):
+    def __init__(self, **kwargs):
+        super(DoubleShapes3DCorrelated, self).__init__()
+
+    def sample_latent(self, size=1):
+        samples = np.zeros((size, self.latents_sizes.size))
+        samples_b = np.zeros((size, self.latents_sizes.size))
+
+        for lat_i, lat_size in enumerate(self.latents_sizes):
+            samples[:, lat_i] = np.random.randint(lat_size, size=size)
+            samples_b[:, lat_i] = samples[:, lat_i]
+
+        # get second sample
+        for lat_i, lat_size in enumerate(self.latents_sizes[:3]):
+            choices = [(lat_i + offset) % lat_size for offset in range(1, 1 + lat_size // 2)]
+            samples_b[:, lat_i] = np.random.choice(choices, size=size)
+
+        return samples, samples_b
