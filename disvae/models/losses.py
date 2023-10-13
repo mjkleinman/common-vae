@@ -425,7 +425,7 @@ class CommonLatentLoss(BaseLoss):
             klqq_loss = anneal_reg * klqq_loss
         # anneal_reg = (linear_annealing(0, 1, self.n_train_steps, self.steps_anneal)
         #              if is_train else 1)
-        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss 
+        loss = rec_loss + self.gamma * kl_loss + self.gamma_klqq * klqq_loss
 
         if storer is not None:
             storer['loss'].append(loss.item())

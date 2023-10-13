@@ -90,7 +90,8 @@ class Visualizer():
             # self.losses = read_loss_from_file(os.path.join(self.model_dir, TRAIN_FILE), loss_of_interest)
 
     def _get_traversal_range(self, mean=0, std=1):
-        """Return the corresponding traversal range in absolute terms."""
+        """Return the corresponding traversal range in absolute terms.
+        Note: default value for self.max_traveral is 2 in main_viz.py"""
         max_traversal = self.max_traversal
 
         if max_traversal < 0.5:
@@ -99,6 +100,12 @@ class Visualizer():
 
         # symmetrical traversals
         return (-1 * max_traversal, max_traversal)
+
+        # # Now, calculate the symmetric traversal range around the mean #MK OCT 8, 2023, default value for max_traversal is 2
+        # lower_bound = mean - max_traversal
+        # upper_bound = mean + max_traversal
+        #
+        # return (lower_bound, upper_bound)
 
     def _traverse_line(self, idx, n_samples, data=None, data_a=None, data_b=None):
         """Return a (size, latent_size) latent sample, corresponding to a traversal
