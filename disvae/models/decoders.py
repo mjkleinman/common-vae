@@ -86,7 +86,7 @@ class DecoderBurgess(nn.Module):
 
 
 class DecoderDoubleburgess(nn.Module):
-    def __init__(self, img_size, latent_dim):
+    def __init__(self, img_size, latent_dim, latent_dim_unq):
         super(DecoderDoubleburgess, self).__init__()
         self.decoder1 = get_decoder("Burgess")(img_size, latent_dim)
         self.decoder2 = get_decoder('Burgess')(img_size, latent_dim)
@@ -94,5 +94,21 @@ class DecoderDoubleburgess(nn.Module):
     def forward(self, z):
         x_a = self.decoder1(z)
         x_b = self.decoder2(z)
+        x = torch.cat((x_a, x_b), dim=1)
+        return x
+
+class DecoderDoubleburgessindeprecon(nn.Module):
+    def __init__(self, img_size, latent_dim, latent_dim_unq):
+        super(DecoderDoubleburgessindeprecon, self).__init__()
+        self.latent_dim_per_view = latent_dim - latent_dim_unq
+        self.decoder1 = get_decoder("Burgess")(img_size, self.latent_dim_per_view) # Only reconstructing per view
+        self.decoder2 = get_decoder('Burgess')(img_size, self.latent_dim_per_view)
+
+    def forward(self, z):
+        # print(z.shape) # (batch_size, latent_dim) where latent dim is (z_a_unq, z_c, z_b_unq)
+        z_a = z[:, :self.latent_dim_per_view]
+        z_b = z[:, -self.latent_dim_per_view:]
+        x_a = self.decoder1(z_a)
+        x_b = self.decoder2(z_b)
         x = torch.cat((x_a, x_b), dim=1)
         return x

@@ -10,7 +10,7 @@ from .encoders import get_encoder
 from .decoders import get_decoder
 import random
 
-MODELS = ["Burgess", "Doubleburgess"]
+MODELS = ["Burgess", "Doubleburgess", "Doubleburgessindeprecon"]
 
 
 def init_specific_model(model_type_enc, model_type_dec, img_size, latent_dim, latent_dim_unq):
@@ -49,7 +49,7 @@ class VAE(nn.Module):
         self.img_size = img_size
         self.num_pixels = self.img_size[1] * self.img_size[2]
         self.encoder = encoder(img_size, self.latent_dim, self.latent_dim - 2 * latent_dim_unq)  # e = c + u
-        self.decoder = decoder(img_size, self.latent_dim)  # z = 2u + c, so z = e + u
+        self.decoder = decoder(img_size, self.latent_dim, self.latent_dim_unq)  # z = 2u + c, so z = e + u
 
         self.reset_parameters()
 
@@ -149,3 +149,5 @@ class DoubleVAE(VAE):
         latent_dists = self.encoder(x_a, x_b)
         latent_sample = self.reparameterize_double(*latent_dists)
         return latent_sample
+
+
