@@ -178,7 +178,10 @@ class DoubleShapes3DCorrelated(DoubleShapes3DBase):
 
         # get second sample
         for lat_i, lat_size in enumerate(self.latents_sizes[:3]):
-            choices = [(lat_i + offset) % lat_size for offset in range(1, 1 + lat_size // 2)]
-            samples_b[:, lat_i] = np.random.choice(choices, size=size)
+            # Randomly choose an offset
+            offset = np.random.randint(1, 1 + lat_size // 2, size=size)
+            # Get the shifted values
+            shifted_values = (samples[:, lat_i] + offset) % lat_size
+            samples_b[:, lat_i] = shifted_values
 
         return samples, samples_b
