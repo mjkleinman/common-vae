@@ -59,12 +59,63 @@ commands = []
 #                         commands += process_command(command)
 
 # #######################################################################################
-# # Shapes3d new random seeds
+# # Shapes3d correlated with both decoders (RUNNING ON W1)
 # #######################################################################################
 
 # commands = []
 device = 'cuda'
 datasets = ['dshapescorr']
+epoch = 70
+zs = [9]
+zus = [3]
+klus = [10] # 10 25 50
+klqqs = [0.1]
+batchs = [128]
+seeds = [0, 1, 2]
+decoder = ['Doubleburgess', 'Doubleburgessindeprecon']
+
+for seed in seeds:
+    for dataset in datasets:
+        for z, zu in zip(zs, zus):
+            for klu in klus:
+                for klqq in klqqs:
+                    for batch in batchs:
+                        for dec in decoder:
+                            command = f"python main.py cvae_{dataset}_randSample_dec={dec}_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md ${dec} -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                            commands += process_command(command)
+
+# #######################################################################################
+# Oct 9
+# New Decoder only decoding on infomration per view
+# #######################################################################################
+
+# device = 'cuda'
+# datasets = ['dshapescorr']
+# epoch = 70
+# zs = [9]
+# zus = [3]
+# klus = [10]
+# klqqs = [0.1]
+# batchs = [128]
+# seeds = [0, 1, 2]
+#
+# for seed in seeds:
+#     for dataset in datasets:
+#         for z, zu in zip(zs, zus):
+#             for klu in klus:
+#                 for klqq in klqqs:
+#                     for batch in batchs:
+#                         command = f"python main.py cvae_{dataset}_randSample_PERVIEWRECON_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgessindeprecon -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+#                         commands += process_command(command)
+
+# merge_commands(commands, gpu_cnt=1, put_device_id=True)
+
+# #######################################################################################
+# Oct 9
+# New Decoder only decoding on infomration per view
+# #######################################################################################
+device = 'cuda'
+datasets = ['dshapes']
 epoch = 70
 zs = [9]
 zus = [3]
@@ -79,7 +130,31 @@ for seed in seeds:
             for klu in klus:
                 for klqq in klqqs:
                     for batch in batchs:
-                        command = f"python main.py cvae_{dataset}_randSample_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgess -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        command = f"python main.py cvae_{dataset}_randSample_PERVIEWRECON_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgessindeprecon -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
                         commands += process_command(command)
+
+# #######################################################################################
+# Oct 9
+# New Decoder only decoding on infomration per view for dspprites
+# #######################################################################################
+device = 'cuda'
+datasets = ['ddsprites2']
+epoch = 70
+zs = [7]
+zus = [2]
+klus = [10]
+klqqs = [0.1]
+seeds = [0, 1, 2]
+batchs = [128]
+
+for seed in seeds:
+    for batch in batchs:
+        for dataset in datasets:
+            for z, zu in zip(zs, zus):
+                for klu in klus:
+                    for klqq in klqqs:
+                        command = f"python main.py cvae_{dataset}_randSample_PERVIEWRECON_klqq={klqq}_klu={klu}_epoch={epoch}_batch={batch}_z={z}_zu={zu}_seed={seed} -s {seed} -d {dataset} -m Doubleburgess -md Doubleburgessindeprecon -l CVAE --lr 0.001 -b {batch} -e {epoch} -z {z} -zu {zu} --gamma-klu {klu} --gamma-klqq {klqq} --device {device}"
+                        commands += process_command(command)
+
 
 merge_commands(commands, gpu_cnt=1, put_device_id=True)
