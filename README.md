@@ -1,5 +1,7 @@
 # Gacs-Korner Common Information Variational Autoencoder
 
+Official Pytorch Implementation for [Gacs-Korner Common Information Variational Autoencoder (NeurIPS 2023)](https://arxiv.org/abs/2205.12239) .
+
 ## Quick Start
 
 The main training script is `main.py`.
@@ -39,3 +41,16 @@ Visualizations, plots, and metrics will be in `results/{name}`
 - seaborn (for plotting)
 
 This repository builds off: https://github.com/YannDubs/disentangling-vae
+
+---
+If you find this useful for your work, please consider citing
+```
+@inproceedings{
+kleinman2023gacskorner,
+title={Gacs-Korner Common Information Variational Autoencoder},
+author={Michael Kleinman and Alessandro Achille and Stefano Soatto and Jonathan Kao},
+booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
+year={2023},
+url={https://openreview.net/forum?id=e4XidX6AHd}
+}
+```
